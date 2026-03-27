@@ -3734,35 +3734,174 @@ function init() {
 }
 
 async function loadFromDB() {
+  // 과정개요 (단일 레코드)
   try {
-    // 학습목표 로드
+    const { data, error } = await supabaseClient
+      .from('course_overview')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (!error && data && data.length > 0) {
+      const r = data[0];
+      const overview = {
+        id: r.id,
+        course_name:     r.course_name,
+        education_goal:  r.education_goal,
+        target_audience: r.target_audience,
+        details:         r.details,
+        created_at:      r.created_at,
+      };
+      localStorage.setItem(OVERVIEW_KEY, JSON.stringify(overview));
+      renderOverview();
+      updateChips(); updateTabDots();
+    }
+  } catch (e) { console.warn('과정개요 DB 로드 실패:', e); }
+
+  // 전문분야 (job_roles)
+  try {
+    const { data, error } = await supabaseClient
+      .from('job_roles')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (!error && data && data.length > 0) {
+      const records = data.map(r => ({
+        id:         r.id,
+        name:       r.job_name,
+        definition: r.job_definition,
+        mainWork:   r.main_tasks,
+        detail:     r.task_details,
+        knowledge:  r.expertise,
+        skill:      r.skills_tools,
+        experience: r.work_experience,
+        createdAt:  r.created_at,
+      }));
+      saveRecords('job', records);
+      renderList('job');
+      updateChips(); updateTabDots();
+    }
+  } catch (e) { console.warn('전문분야 DB 로드 실패:', e); }
+
+  // 전문분야별 과정 (education_jobs + education_courses)
+  try {
+    const { data: jobs, error: jobErr } = await supabaseClient
+      .from('education_jobs')
+      .select('*')
+      .order('created_at', { ascending: true });
+    const { data: courses, error: courseErr } = await supabaseClient
+      .from('education_courses')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (!jobErr && jobs && jobs.length > 0) {
+      const jobRecords = jobs.map(j => ({ id: j.id, job_name: j.job_name, created_at: j.created_at }));
+      localStorage.setItem(EDU_JOBS_KEY, JSON.stringify(jobRecords));
+    }
+    if (!courseErr && courses && courses.length > 0) {
+      const courseRecords = courses.map(c => ({
+        id:              c.id,
+        job_id:          c.job_id,
+        course_name:     c.course_name,
+        education_goal:  c.education_goal,
+        target_audience: c.target_audience,
+        details:         c.details,
+        created_at:      c.created_at,
+      }));
+      localStorage.setItem(EDU_COURSES_KEY, JSON.stringify(courseRecords));
+    }
+    if (!jobErr && jobs && jobs.length > 0) {
+      renderEduList();
+      updateChips(); updateTabDots();
+    }
+  } catch (e) { console.warn('전문분야별 과정 DB 로드 실패:', e); }
+
+  // 설문결과 (survey_results)
+  try {
+    const { data, error } = await supabaseClient
+      .from('survey_results')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (!error && data && data.length > 0) {
+      const records = data.map(r => ({
+        id:        r.id,
+        name:      r.survey_name,
+        result:    r.response_result,
+        createdAt: r.created_at,
+      }));
+      saveRecords('survey', records);
+      renderList('survey');
+      updateChips(); updateTabDots();
+    }
+  } catch (e) { console.warn('설문결과 DB 로드 실패:', e); }
+
+  // 교육제안 (education_proposals)
+  try {
+    const { data, error } = await supabaseClient
+      .from('education_proposals')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (!error && data && data.length > 0) {
+      const records = data.map(r => ({
+        id:         r.id,
+        name:       r.proposal_course_name,
+        reason:     r.necessity_background,
+        effect:     r.expected_effects,
+        curriculum: r.main_curriculum,
+        createdAt:  r.created_at,
+      }));
+      saveRecords('proposal', records);
+      renderList('proposal');
+      updateChips(); updateTabDots();
+    }
+  } catch (e) { console.warn('교육제안 DB 로드 실패:', e); }
+
+  // 연관조직 (org_visions)
+  try {
+    const { data, error } = await supabaseClient
+      .from('org_visions')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (!error && data && data.length > 0) {
+      const records = data.map(r => ({
+        id:        r.id,
+        name:      r.org_name,
+        goal:      r.org_goal,
+        coreJob:   r.core_jobs,
+        skill:     r.competency_skills,
+        direction: r.education_direction,
+        createdAt: r.created_at,
+      }));
+      saveRecords('vision', records);
+      renderList('vision');
+      updateChips(); updateTabDots();
+    }
+  } catch (e) { console.warn('연관조직 DB 로드 실패:', e); }
+
+  // 학습목표
+  try {
     const { data: objectives, error: objErr } = await supabaseClient
       .from('learning_objectives')
       .select('title, description, sort_order')
       .order('sort_order', { ascending: true });
-
     if (!objErr && objectives && objectives.length > 0) {
       const parsed = objectives.map(r => ({ title: r.title, description: r.description }));
       window._lastObjectives = parsed;
       renderObjectives(parsed);
     }
-  } catch (e) {
-    console.warn('학습목표 DB 로드 실패:', e);
-  }
+  } catch (e) { console.warn('학습목표 DB 로드 실패:', e); }
 
+  // 강사추천
   try {
-    // 강사추천 로드
     const { data: instructors, error: instErr } = await supabaseClient
       .from('instructor_recommendations')
       .select('name, expertise, match_reason, sort_order')
       .order('sort_order', { ascending: true });
-
     if (!instErr && instructors && instructors.length > 0) {
       renderInstructors(instructors);
     }
-  } catch (e) {
-    console.warn('강사추천 DB 로드 실패:', e);
-  }
+  } catch (e) { console.warn('강사추천 DB 로드 실패:', e); }
+
+  // 칩 & 탭 dot 업데이트
+  updateChips();
+  updateTabDots();
 }
 
 document.addEventListener('DOMContentLoaded', init);
