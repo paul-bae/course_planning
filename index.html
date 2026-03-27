@@ -1,0 +1,3771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>과정 기획 자동화</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-900:  #1E3A8A;
+      --blue-800:  #1E40AF;
+      --blue-700:  #1D4ED8;
+      --blue-600:  #2563EB;
+      --blue-500:  #3B82F6;
+      --blue-400:  #60A5FA;
+      --blue-100:  #DBEAFE;
+      --blue-50:   #EFF6FF;
+
+      --gray-900:  #111827;
+      --gray-700:  #374151;
+      --gray-500:  #6B7280;
+      --gray-400:  #9CA3AF;
+      --gray-300:  #D1D5DB;
+      --gray-200:  #E5E7EB;
+      --gray-100:  #F3F4F6;
+      --gray-50:   #F9FAFB;
+
+      --green-600: #16A34A;
+      --green-700: #15803D;
+      --green-50:  #F0FDF4;
+      --green-200: #BBF7D0;
+
+      --red-600:   #DC2626;
+      --red-100:   #FEE2E2;
+      --red-300:   #FCA5A5;
+
+      --amber-600: #D97706;
+      --amber-50:  #FFFBEB;
+      --amber-200: #FCD34D;
+
+      --color-bg:       #F0F4F8;
+      --color-surface:  #FFFFFF;
+      --color-border:   #E2E8F0;
+      --color-primary:  var(--blue-600);
+      --color-primary-h:var(--blue-700);
+      --color-text:     var(--gray-900);
+      --color-muted:    var(--gray-500);
+
+      --radius-sm:  6px;
+      --radius-md:  8px;
+      --radius-lg:  12px;
+      --radius-xl:  16px;
+
+      --shadow-xs:  0 1px 2px rgba(0,0,0,.06);
+      --shadow-sm:  0 1px 4px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:  0 4px 16px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
+      --shadow-lg:  0 8px 32px rgba(0,0,0,.12), 0 4px 12px rgba(0,0,0,.08);
+
+      --font: 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--color-text);
+      background: var(--color-bg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── App Shell ── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      min-width: 1120px;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    #header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 60px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      box-shadow: var(--shadow-xs);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    #header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    #header-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--blue-600), var(--blue-800));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    #header-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--blue-800);
+      letter-spacing: -0.4px;
+    }
+    #header-subtitle {
+      font-size: 12px;
+      color: var(--color-muted);
+      font-weight: 400;
+    }
+    #header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-badge {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--color-muted);
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+
+    /* ── Main Layout ── */
+    #main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Left Panel ── */
+    #left-panel {
+      flex: 0 0 40%;
+      width: 40%;
+      min-width: 0;
+      max-width: 40%;
+      display: flex;
+      flex-direction: column;
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border);
+      overflow: hidden;
+    }
+
+    /* ── Tab Nav ── */
+    #tab-nav {
+      display: flex;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--color-border);
+      flex-shrink: 0;
+      padding: 0 4px;
+      gap: 2px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    #tab-nav::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 0;
+      padding: 13px 6px 11px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--color-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color .15s, border-color .15s, background .15s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      position: relative;
+    }
+    .tab-btn:hover {
+      color: var(--blue-600);
+      background: var(--blue-50);
+    }
+    .tab-btn.active {
+      color: var(--blue-700);
+      border-bottom-color: var(--blue-600);
+      font-weight: 700;
+      background: var(--color-surface);
+    }
+    .tab-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green-600);
+      flex-shrink: 0;
+      display: none;
+    }
+    .tab-btn.has-data .tab-dot {
+      display: block;
+    }
+
+    /* Tab Content Area */
+    #tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 28px 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--gray-300) transparent;
+    }
+
+    /* Tab Section Header — now contains title + add button */
+    .tab-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid var(--blue-100);
+    }
+    .tab-section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-section-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .tab-section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.2px;
+    }
+
+    /* Add button in tab header */
+    .btn-add-record {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      background: linear-gradient(135deg, var(--blue-600), var(--blue-700));
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(37,99,235,.30);
+      transition: background .15s, box-shadow .15s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn-add-record:hover {
+      background: linear-gradient(135deg, var(--blue-700), var(--blue-800));
+      box-shadow: 0 3px 10px rgba(37,99,235,.35);
+    }
+    .btn-add-record:active { transform: scale(.97); }
+    .btn-add-record:focus-visible {
+      outline: 2px solid var(--blue-500);
+      outline-offset: 2px;
+    }
+
+    /* Record List */
+    .record-list { }
+    .record-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .record-list-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+    .record-count-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--blue-700);
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      border-radius: 20px;
+      padding: 1px 8px;
+    }
+
+    .record-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1.5px solid var(--gray-200);
+      border-left: 3px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      margin-bottom: 8px;
+      background: var(--color-surface);
+      transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    .record-item:hover {
+      border-color: var(--blue-400);
+      border-left-color: var(--blue-500);
+      background: var(--blue-50);
+      box-shadow: var(--shadow-sm);
+    }
+    .record-item-index {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--blue-100);
+      color: var(--blue-700);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .record-item-body { flex: 1; min-width: 0; }
+    .record-item-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-900);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.5;
+    }
+    .record-item-sub {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.5;
+    }
+    .record-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    /* Empty state */
+    .record-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 36px 24px;
+      gap: 10px;
+      color: var(--gray-400);
+      font-size: 13px;
+      text-align: center;
+      border: 1.5px dashed var(--gray-200);
+      border-radius: var(--radius-md);
+      background: var(--gray-50);
+      line-height: 1.7;
+    }
+    .record-empty p { color: var(--gray-500); font-weight: 500; }
+    .record-empty small { font-size: 12px; color: var(--gray-400); }
+
+    /* ── Overview Card ── */
+    .overview-card {
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      animation: cardIn .25s ease both;
+    }
+    .overview-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--blue-100);
+      margin-bottom: 0;
+    }
+    .overview-card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--blue-800);
+      line-height: 1.4;
+      flex: 1;
+      min-width: 0;
+    }
+    .overview-card-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .overview-card-body {
+      padding-top: 4px;
+    }
+    .overview-field {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .overview-field:last-child {
+      border-bottom: none;
+    }
+    .overview-field-label {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue-700);
+      background: var(--blue-50);
+      border-left: 3px solid var(--blue-500);
+      padding: 2px 8px 2px 7px;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 8px;
+      letter-spacing: .3px;
+    }
+    .overview-field-value {
+      font-size: 14px;
+      color: var(--gray-700);
+      line-height: 1.7;
+      white-space: pre-wrap;
+      padding-left: 2px;
+    }
+    .overview-card-footer {
+      margin-top: 16px;
+      font-size: 11px;
+      color: var(--gray-400);
+      text-align: right;
+    }
+
+    /* ── Modal Overlay ── */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .45);
+      backdrop-filter: blur(3px);
+      z-index: 8000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #modal-overlay.open { display: flex; }
+
+    /* ── Modal Dialog ── */
+    #modal-dialog {
+      background: var(--color-surface);
+      border-radius: var(--radius-xl);
+      width: 600px;
+      max-width: 100%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn .22s cubic-bezier(.34,1.56,.64,1);
+      overflow: hidden;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.94) translateY(-10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Modal Header */
+    #modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--color-border);
+      flex-shrink: 0;
+    }
+    #modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.3px;
+    }
+    #modal-close-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: var(--gray-100);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-500);
+      transition: background .15s, color .15s;
+      flex-shrink: 0;
+    }
+    #modal-close-btn:hover { background: var(--gray-200); color: var(--gray-800); }
+    #modal-close-btn:focus-visible {
+      outline: 2px solid var(--blue-500);
+      outline-offset: 2px;
+    }
+
+    /* Modal Body */
+    #modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 22px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--gray-300) transparent;
+    }
+
+    /* Modal Footer */
+    #modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 14px 22px 18px;
+      border-top: 1px solid var(--color-border);
+      flex-shrink: 0;
+    }
+
+    /* Form (used inside modal) */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 5px;
+    }
+    .field label .char-counter {
+      font-weight: 500;
+      color: var(--gray-400);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      transition: color .15s;
+    }
+    .field label .char-counter.near-limit {
+      color: var(--amber-600);
+      font-weight: 600;
+    }
+    .field label .char-counter.at-limit {
+      color: var(--red-600);
+      font-weight: 700;
+    }
+    .field input[type="text"],
+    .field textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-family: var(--font);
+      color: var(--color-text);
+      background: var(--gray-50);
+      resize: none;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+      line-height: 1.6;
+    }
+    .field input[type="text"]:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--blue-500);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+      background: #fff;
+    }
+    .field input[type="text"]::placeholder,
+    .field textarea::placeholder {
+      color: var(--gray-400);
+    }
+
+    /* ── Right Panel ── */
+    #right-panel {
+      flex: 0 0 60%;
+      width: 60%;
+      min-width: 0;
+      max-width: 60%;
+      display: flex;
+      flex-direction: column;
+      background: var(--color-bg);
+      overflow: hidden;
+    }
+
+    #right-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      flex-shrink: 0;
+      gap: 16px;
+      box-shadow: var(--shadow-xs);
+    }
+    #right-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1;
+      min-width: 0;
+    }
+    #right-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.3px;
+    }
+    #model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--blue-700);
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      border-radius: 20px;
+      padding: 3px 10px;
+      white-space: nowrap;
+      max-width: 320px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      align-self: flex-start;
+    }
+    #model-badge::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--blue-500);
+      flex-shrink: 0;
+    }
+    #model-badge.trying::before {
+      background: var(--amber-600);
+      animation: pulse 1s ease-in-out infinite;
+    }
+    #model-badge.error::before {
+      background: var(--red-600);
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    #right-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--gray-300) transparent;
+    }
+
+    /* Data Summary */
+    #data-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xs);
+    }
+    #data-summary-label {
+      width: 100%;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      margin-bottom: 4px;
+    }
+    .data-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      color: var(--gray-500);
+      transition: all .15s;
+    }
+    .data-chip .chip-check {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid var(--gray-300);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all .15s;
+    }
+    .data-chip.has-data {
+      background: var(--blue-50);
+      border-color: var(--blue-200);
+      color: var(--blue-700);
+      font-weight: 600;
+    }
+    .data-chip.has-data .chip-check {
+      background: var(--green-600);
+      border-color: var(--green-600);
+    }
+    .data-chip .chip-count {
+      font-size: 11px;
+      color: inherit;
+      opacity: .75;
+    }
+
+    /* Objective Cards */
+    #objectives-section {
+      margin-bottom: 24px;
+    }
+
+    #objectives-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg);
+    }
+
+    #objectives-section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #objectives-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: 520px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--gray-300) transparent;
+      padding-right: 4px;
+    }
+
+    /* 학습목표 카운터 뱃지 */
+    #objectives-count-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--blue-100);
+      color: var(--blue-700);
+      margin-left: 8px;
+    }
+
+    .objective-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .objective-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .obj-number {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--blue-600), var(--blue-800));
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(37,99,235,.30);
+    }
+    .obj-body { flex: 1; min-width: 0; }
+    .obj-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-900);
+      line-height: 1.5;
+      margin-bottom: 6px;
+      letter-spacing: -0.2px;
+    }
+    .obj-desc {
+      font-size: 13px;
+      color: var(--gray-700);
+      line-height: 1.7;
+    }
+
+    /* Empty / loading states */
+    #objectives-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 14px;
+      color: var(--color-muted);
+      text-align: center;
+      background: var(--color-surface);
+      border: 1.5px dashed var(--gray-200);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+      min-height: 460px;
+    }
+    #objectives-placeholder .placeholder-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--blue-50);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #objectives-placeholder p {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-600);
+      line-height: 1.7;
+    }
+    #objectives-placeholder small {
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--blue-100);
+      border-top-color: var(--blue-500);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background .15s, box-shadow .15s, opacity .15s, transform .1s;
+      white-space: nowrap;
+      line-height: 1;
+      letter-spacing: -0.1px;
+    }
+    .btn:active:not(:disabled) { transform: scale(.97); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .btn:focus-visible {
+      outline: 2px solid var(--blue-500);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue-600), var(--blue-700));
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(37,99,235,.30);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--blue-700), var(--blue-800));
+      box-shadow: 0 3px 10px rgba(37,99,235,.35);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--green-600), var(--green-700));
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(22,163,74,.25);
+    }
+    .btn-success:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--green-700), #166534);
+      box-shadow: 0 3px 10px rgba(22,163,74,.30);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--blue-700);
+      border: 1.5px solid var(--blue-300);
+    }
+    .btn-outline:hover:not(:disabled) {
+      background: var(--blue-50);
+      border-color: var(--blue-500);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--gray-600);
+      border: 1.5px solid var(--gray-200);
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: var(--gray-100);
+      color: var(--gray-800);
+      border-color: var(--gray-300);
+    }
+
+    .btn-danger-ghost {
+      background: transparent;
+      color: var(--red-600);
+      border: 1.5px solid var(--red-300);
+    }
+    .btn-danger-ghost:hover:not(:disabled) {
+      background: var(--red-100);
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: var(--radius-sm);
+    }
+
+    .btn-generate {
+      padding: 10px 22px;
+      font-size: 14px;
+      border-radius: var(--radius-md);
+      min-width: 160px;
+      letter-spacing: -0.2px;
+    }
+
+    /* ── Toast ── */
+    #toast-container {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      box-shadow: var(--shadow-lg);
+      animation: toastSlideUp .25s cubic-bezier(.34,1.56,.64,1);
+      pointer-events: auto;
+      max-width: 340px;
+      border-left: 3px solid transparent;
+    }
+    .toast-icon {
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .toast-success {
+      background: #F0FDF4;
+      color: #15803D;
+      border-left-color: var(--green-600);
+      border: 1px solid var(--green-200);
+      border-left: 3px solid var(--green-600);
+    }
+    .toast-error {
+      background: #FEF2F2;
+      color: #B91C1C;
+      border: 1px solid var(--red-300);
+      border-left: 3px solid var(--red-600);
+    }
+    .toast-info {
+      background: var(--blue-50);
+      color: var(--blue-800);
+      border: 1px solid var(--blue-100);
+      border-left: 3px solid var(--blue-600);
+    }
+    .toast-warning {
+      background: var(--amber-50);
+      color: #92400E;
+      border: 1px solid var(--amber-200);
+      border-left: 3px solid var(--amber-600);
+    }
+
+    @keyframes toastSlideUp {
+      from { opacity: 0; transform: translateY(16px) scale(.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── Confirm Dialog ── */
+    #confirm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,.40);
+      backdrop-filter: blur(2px);
+      z-index: 9990;
+      align-items: center;
+      justify-content: center;
+    }
+    #confirm-overlay.open { display: flex; }
+    #confirm-dialog {
+      background: var(--color-surface);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      max-width: 380px;
+      width: 90%;
+      box-shadow: var(--shadow-lg);
+      animation: dialogIn .2s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes dialogIn {
+      from { opacity: 0; transform: scale(.94) translateY(-8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    #confirm-dialog-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--red-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    #confirm-dialog h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--gray-900);
+    }
+    #confirm-dialog p {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-bottom: 22px;
+      line-height: 1.6;
+    }
+    #confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── Progress ── */
+    #progress-bar-wrap {
+      height: 3px;
+      background: var(--blue-100);
+      position: relative;
+      flex-shrink: 0;
+    }
+    #progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue-500), var(--blue-400));
+      width: 0%;
+      transition: width .3s ease;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+    /* ── Loading card ── */
+    .loading-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 60px 0;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+    }
+    .loading-card p {
+      font-size: 13px;
+      color: var(--gray-500);
+      font-weight: 500;
+    }
+
+    /* ── Slide-up animation for cards ── */
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Education 1:N Hierarchy ── */
+    .btn-add-edu-job {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      background: linear-gradient(135deg, var(--blue-600), var(--blue-700));
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(37,99,235,.30);
+      transition: background .15s, box-shadow .15s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn-add-edu-job:hover {
+      background: linear-gradient(135deg, var(--blue-700), var(--blue-800));
+      box-shadow: 0 3px 10px rgba(37,99,235,.35);
+    }
+    .btn-add-edu-job:active { transform: scale(.97); }
+    .btn-add-edu-job:focus-visible {
+      outline: 2px solid var(--blue-500);
+      outline-offset: 2px;
+    }
+
+    .edu-job-block {
+      margin-bottom: 10px;
+      border: 1.5px solid var(--blue-200);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .edu-job-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--blue-50);
+      border-bottom: 1px solid var(--blue-100);
+    }
+    .edu-job-header-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .edu-job-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--blue-900);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .edu-job-header-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .edu-courses-area {
+      background: var(--color-surface);
+    }
+
+    .edu-course-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px 8px 28px;
+      border-bottom: 1px solid var(--gray-100);
+      transition: background .12s;
+    }
+    .edu-course-item:last-child {
+      border-bottom: none;
+    }
+    .edu-course-item:hover {
+      background: var(--gray-50);
+    }
+    .edu-course-arrow {
+      flex-shrink: 0;
+      color: var(--gray-400);
+      font-size: 12px;
+      margin-right: 2px;
+    }
+    .edu-course-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .edu-course-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-700);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .edu-course-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .edu-add-course-row {
+      display: flex;
+      align-items: center;
+      padding: 7px 14px 7px 28px;
+      background: var(--gray-50);
+      border-top: 1px dashed var(--gray-200);
+    }
+    .btn-add-course {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: transparent;
+      color: var(--blue-600);
+      border: 1.5px dashed var(--blue-300);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background .12s, border-color .12s;
+      white-space: nowrap;
+    }
+    .btn-add-course:hover {
+      background: var(--blue-50);
+      border-color: var(--blue-500);
+    }
+    .btn-add-course:focus-visible {
+      outline: 2px solid var(--blue-500);
+      outline-offset: 2px;
+    }
+
+    /* ── Instructor Section ── */
+    #instructor-section {
+      margin-top: 24px;
+    }
+
+    #instructor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg);
+    }
+
+    #instructor-header-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #instructor-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.2px;
+    }
+
+    #instructor-count-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--blue-100);
+      color: var(--blue-700);
+    }
+
+    #instructor-model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--blue-700);
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      border-radius: 20px;
+      padding: 2px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    #instructor-model-badge::before {
+      display: none;
+    }
+
+    #instructor-model-badge.trying::before {
+      background: var(--amber-600);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    #instructor-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: linear-gradient(135deg, var(--blue-600), var(--blue-700));
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(37,99,235,.30);
+      transition: background .15s, box-shadow .15s, transform .1s;
+      white-space: nowrap;
+    }
+    #instructor-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--blue-700), var(--blue-800));
+      box-shadow: 0 3px 10px rgba(37,99,235,.35);
+    }
+    #instructor-btn:active:not(:disabled) { transform: scale(.97); }
+    #instructor-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    #instructor-btn:focus-visible {
+      outline: 2px solid var(--blue-500);
+      outline-offset: 2px;
+    }
+
+    #instructor-content {
+      height: 560px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--gray-300) transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 4px;
+    }
+
+    /* Instructor Card */
+    .instructor-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: box-shadow .2s, transform .2s;
+      animation: cardIn .3s ease both;
+    }
+    .instructor-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .instructor-number {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--blue-600), var(--blue-800));
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(37,99,235,.30);
+    }
+
+    .instructor-body { flex: 1; min-width: 0; }
+
+    .instructor-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-900);
+      line-height: 1.5;
+      margin-bottom: 5px;
+      letter-spacing: -0.2px;
+    }
+
+    .instructor-expertise {
+      font-size: 12px;
+      color: var(--blue-700);
+      font-weight: 500;
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
+
+    .instructor-expertise-label {
+      color: var(--gray-500);
+      font-weight: 400;
+    }
+
+    .instructor-reason {
+      font-size: 13px;
+      color: var(--gray-700);
+      line-height: 1.7;
+    }
+
+    .instructor-reason-label {
+      color: var(--gray-500);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* Instructor placeholder */
+    #instructor-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 14px;
+      color: var(--color-muted);
+      text-align: center;
+      background: var(--color-surface);
+      border: 1.5px dashed var(--gray-200);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+    }
+
+    #instructor-placeholder .placeholder-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--blue-50);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #instructor-placeholder p {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-600);
+      line-height: 1.7;
+    }
+
+    #instructor-placeholder small {
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Header -->
+  <header id="header">
+    <div id="header-left">
+      <div id="header-icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="2"/>
+          <line x1="9" y1="12" x2="15" y2="12"/>
+          <line x1="9" y1="16" x2="12" y2="16"/>
+        </svg>
+      </div>
+      <div>
+        <div id="header-title">과정 기획 자동화</div>
+        <div id="header-subtitle">AI 기반 학습목표 자동 생성 및 강사 추천</div>
+      </div>
+    </div>
+    <div id="header-right">
+      <span class="header-badge">데스크탑 최적화</span>
+      <span class="header-badge">localStorage 저장</span>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <div id="main">
+
+    <!-- ===== LEFT PANEL ===== -->
+    <aside id="left-panel">
+
+      <!-- Tab Nav -->
+      <nav id="tab-nav" role="tablist" aria-label="데이터 유형 탭">
+        <button class="tab-btn active" data-tab="overview" role="tab" aria-selected="true">
+          <span class="tab-dot" aria-hidden="true"></span>과정개요
+        </button>
+        <button class="tab-btn" data-tab="job"      role="tab" aria-selected="false">
+          <span class="tab-dot" aria-hidden="true"></span>전문분야
+        </button>
+        <button class="tab-btn" data-tab="edu"      role="tab" aria-selected="false">
+          <span class="tab-dot" aria-hidden="true"></span>전문분야별 과정
+        </button>
+        <button class="tab-btn" data-tab="survey"   role="tab" aria-selected="false">
+          <span class="tab-dot" aria-hidden="true"></span>설문결과
+        </button>
+        <button class="tab-btn" data-tab="proposal" role="tab" aria-selected="false">
+          <span class="tab-dot" aria-hidden="true"></span>교육제안
+        </button>
+        <button class="tab-btn" data-tab="vision"   role="tab" aria-selected="false">
+          <span class="tab-dot" aria-hidden="true"></span>연관조직
+        </button>
+      </nav>
+
+      <!-- Tab Content -->
+      <div id="tab-content">
+
+        <!-- ── 과정개요 탭 ── -->
+        <div id="tab-overview" class="tab-pane">
+          <div class="tab-section-header">
+            <div class="tab-section-header-left">
+              <div class="tab-section-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+              </div>
+              <span class="tab-section-title">과정개요</span>
+            </div>
+            <!-- 단일 레코드이므로 추가 버튼 없음 -->
+          </div>
+          <!-- 과정개요 폼 / 카드 영역 -->
+          <div id="overview-content"></div>
+        </div>
+
+        <!-- ── 직무 탭 ── -->
+        <div id="tab-job" class="tab-pane" style="display:none">
+          <div class="tab-section-header">
+            <div class="tab-section-header-left">
+              <div class="tab-section-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+                </svg>
+              </div>
+              <span class="tab-section-title">전문분야 목록</span>
+            </div>
+            <button class="btn-add-record" data-tab="job" aria-label="전문분야 추가">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
+          </div>
+          <div class="record-list">
+            <div class="record-list-header">
+              <span class="record-list-title">저장된 전문분야 목록</span>
+              <span class="record-count-badge" id="job-count-badge">0건</span>
+            </div>
+            <div id="job-list"></div>
+          </div>
+        </div>
+
+        <!-- ── 교육체계 탭 ── -->
+        <div id="tab-edu" class="tab-pane" style="display:none">
+          <div class="tab-section-header">
+            <div class="tab-section-header-left">
+              <div class="tab-section-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+                </svg>
+              </div>
+              <span class="tab-section-title">전문분야별 과정 목록</span>
+            </div>
+            <button class="btn-add-edu-job" aria-label="직무 추가">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              + 직무 추가
+            </button>
+          </div>
+          <div class="record-list">
+            <div class="record-list-header">
+              <span class="record-list-title">저장된 전문분야별 과정 목록</span>
+              <span class="record-count-badge" id="edu-count-badge">0건</span>
+            </div>
+            <div id="edu-list"></div>
+          </div>
+        </div>
+
+        <!-- ── 설문결과 탭 ── -->
+        <div id="tab-survey" class="tab-pane" style="display:none">
+          <div class="tab-section-header">
+            <div class="tab-section-header-left">
+              <div class="tab-section-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                </svg>
+              </div>
+              <span class="tab-section-title">설문결과 목록</span>
+            </div>
+            <button class="btn-add-record" data-tab="survey" aria-label="설문결과 추가">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
+          </div>
+          <div class="record-list">
+            <div class="record-list-header">
+              <span class="record-list-title">저장된 설문결과 목록</span>
+              <span class="record-count-badge" id="survey-count-badge">0건</span>
+            </div>
+            <div id="survey-list"></div>
+          </div>
+        </div>
+
+        <!-- ── 교육제안 탭 ── -->
+        <div id="tab-proposal" class="tab-pane" style="display:none">
+          <div class="tab-section-header">
+            <div class="tab-section-header-left">
+              <div class="tab-section-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              </div>
+              <span class="tab-section-title">교육제안 목록</span>
+            </div>
+            <button class="btn-add-record" data-tab="proposal" aria-label="교육제안 추가">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
+          </div>
+          <div class="record-list">
+            <div class="record-list-header">
+              <span class="record-list-title">저장된 교육제안 목록</span>
+              <span class="record-count-badge" id="proposal-count-badge">0건</span>
+            </div>
+            <div id="proposal-list"></div>
+          </div>
+        </div>
+
+        <!-- ── 조직비전 탭 ── -->
+        <div id="tab-vision" class="tab-pane" style="display:none">
+          <div class="tab-section-header">
+            <div class="tab-section-header-left">
+              <div class="tab-section-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+                </svg>
+              </div>
+              <span class="tab-section-title">연관조직 목록</span>
+            </div>
+            <button class="btn-add-record" data-tab="vision" aria-label="연관조직 추가">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
+          </div>
+          <div class="record-list">
+            <div class="record-list-header">
+              <span class="record-list-title">저장된 연관조직 목록</span>
+              <span class="record-count-badge" id="vision-count-badge">0건</span>
+            </div>
+            <div id="vision-list"></div>
+          </div>
+        </div>
+
+      </div><!-- /tab-content -->
+    </aside><!-- /left-panel -->
+
+    <!-- ===== RIGHT PANEL ===== -->
+    <section id="right-panel">
+
+      <div id="right-header">
+        <div id="right-header-left">
+          <span id="right-title">학습목표 / 강사 추천</span>
+          <span id="model-badge">기본 모델: llama-3.3-70b-instruct</span>
+        </div>
+        <button class="btn btn-primary btn-generate" id="generate-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          학습목표 생성
+        </button>
+      </div>
+
+      <!-- Progress bar -->
+      <div id="progress-bar-wrap" style="display:none;">
+        <div id="progress-bar"></div>
+      </div>
+
+      <div id="right-content">
+
+        <!-- Data Summary -->
+        <div id="data-summary">
+          <div id="data-summary-label">입력 데이터 현황</div>
+          <div class="data-chip" id="chip-overview">
+            <span class="chip-check" aria-hidden="true">
+              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chip-check-icon" style="display:none"><polyline points="2 6 5 9 10 3"/></svg>
+            </span>
+            과정개요
+          </div>
+          <div class="data-chip" id="chip-job">
+            <span class="chip-check" aria-hidden="true">
+              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chip-check-icon" style="display:none"><polyline points="2 6 5 9 10 3"/></svg>
+            </span>
+            전문분야 <span class="chip-count">(0건)</span>
+          </div>
+          <div class="data-chip" id="chip-edu">
+            <span class="chip-check" aria-hidden="true">
+              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chip-check-icon" style="display:none"><polyline points="2 6 5 9 10 3"/></svg>
+            </span>
+            전문분야별 과정 <span class="chip-count">(0건)</span>
+          </div>
+          <div class="data-chip" id="chip-survey">
+            <span class="chip-check" aria-hidden="true">
+              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chip-check-icon" style="display:none"><polyline points="2 6 5 9 10 3"/></svg>
+            </span>
+            설문결과 <span class="chip-count">(0건)</span>
+          </div>
+          <div class="data-chip" id="chip-proposal">
+            <span class="chip-check" aria-hidden="true">
+              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chip-check-icon" style="display:none"><polyline points="2 6 5 9 10 3"/></svg>
+            </span>
+            교육제안 <span class="chip-count">(0건)</span>
+          </div>
+          <div class="data-chip" id="chip-vision">
+            <span class="chip-check" aria-hidden="true">
+              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chip-check-icon" style="display:none"><polyline points="2 6 5 9 10 3"/></svg>
+            </span>
+            연관조직 <span class="chip-count">(0건)</span>
+          </div>
+        </div>
+
+        <!-- Objectives Section -->
+        <div id="objectives-section">
+          <div id="objectives-section-header">
+            <div id="objectives-section-header-left">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:15px;font-weight:700;color:var(--gray-900);letter-spacing:-0.2px;">학습 목표</span>
+                <span id="objectives-count-badge" style="display:none;"></span>
+              </div>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--gray-400);line-height:1.5;">학습목표는 과정개요, 전문분야, 전문분야별 과정, 설문결과, 교육제안, 연관조직 데이터 기반으로 AI가 분석한 데이터입니다.</p>
+            </div>
+          </div>
+
+          <!-- Objectives output -->
+          <div id="objectives-container">
+            <!-- Placeholder (inside scroll container) -->
+            <div id="objectives-placeholder">
+              <div class="placeholder-icon" aria-hidden="true">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--blue-400)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+                  <rect x="9" y="3" width="6" height="4" rx="2"/>
+                  <line x1="9" y1="12" x2="15" y2="12"/>
+                  <line x1="9" y1="16" x2="12" y2="16"/>
+                </svg>
+              </div>
+              <p>좌측에서 데이터를 입력하고<br />'학습목표 생성' 버튼을 눌러주세요.</p>
+              <small>입력된 데이터를 바탕으로 AI가 학습목표 10개 이내를 생성합니다.</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- 강사추천 섹션 -->
+        <div id="instructor-section">
+          <div id="instructor-header">
+            <div id="instructor-header-left">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span id="instructor-title">강사 추천</span>
+                <span id="instructor-count-badge" style="display:none;"></span>
+                <span id="instructor-model-badge">-</span>
+              </div>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--gray-400);line-height:1.5;">강사 추천은 과정 학습 목표와 강사 전문 역량을 매칭하여 AI가 추천한 데이터입니다.</p>
+            </div>
+            <button id="instructor-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                <path d="M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+              강사 추천
+            </button>
+          </div>
+          <div id="instructor-content">
+            <div id="instructor-placeholder">
+              <div class="placeholder-icon" aria-hidden="true">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--blue-400)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 010 7.75"/>
+                </svg>
+              </div>
+              <p>학습목표 생성 후<br />'강사 추천' 버튼을 눌러주세요.</p>
+              <small>학습목표를 분석하여 AI가 적합한 강사를 최대 10명 추천합니다.</small>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /right-content -->
+    </section><!-- /right-panel -->
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- Toast Container -->
+<div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+<!-- Confirm Dialog -->
+<div id="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div id="confirm-dialog">
+    <div id="confirm-dialog-icon" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red-600)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+      </svg>
+    </div>
+    <h3 id="confirm-title">삭제 확인</h3>
+    <p id="confirm-msg">이 항목을 삭제하시겠습니까?</p>
+    <div id="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">취소</button>
+      <button class="btn btn-danger-ghost" id="confirm-ok">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal Popup ===== -->
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div id="modal-dialog">
+    <div id="modal-header">
+      <span id="modal-title">추가</span>
+      <button id="modal-close-btn" aria-label="닫기">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div id="modal-body">
+      <!-- form fields injected here by JS -->
+    </div>
+    <div id="modal-footer">
+      <button class="btn btn-ghost" id="modal-cancel-btn">취소</button>
+      <button class="btn btn-success" id="modal-save-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        저장
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<script>
+/* ============================================================
+   CONSTANTS & CONFIG
+   ============================================================ */
+const API_KEY = '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';
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+/* ── Supabase ── */
+const SUPABASE_URL      = 'https://mcshhvttsvfurrkpcbdf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jc2hodnR0c3ZmdXJya3BjYmRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5ODI5MDgsImV4cCI6MjA4OTU1ODkwOH0.FRlSXHknfnYoZ4i4-_up8QvppoKHGo50koK9yDkXPUQ';
+const supabaseClient    = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const FREE_MODELS = [
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'meta-llama/llama-3.1-8b-instruct:free',
+  'google/gemma-3-27b-it:free',
+  'google/gemma-3-12b-it:free',
+  'mistralai/mistral-7b-instruct:free',
+  'deepseek/deepseek-r1:free',
+  'deepseek/deepseek-chat-v3-5:free',
+  'qwen/qwen3-235b-a22b:free',
+  'qwen/qwen3-30b-a3b:free',
+  'qwen/qwen3-14b:free',
+  'microsoft/phi-4-reasoning-plus:free',
+  'nvidia/llama-3.1-nemotron-ultra-253b-v1:free',
+  'moonshotai/kimi-k2:free',
+  'tngtech/deepseek-r1t2-chimera:free',
+  'sophosympatheia/rogue-rose-103b-v0.6:free',
+];
+
+const STORAGE_KEYS = {
+  job:      'job_roles',
+  edu:      'education_systems', // legacy — no longer used
+  survey:   'survey_results',
+  proposal: 'education_proposals',
+  vision:   'org_visions',
+};
+
+// 과정개요 단일 레코드 키
+const OVERVIEW_KEY = 'course_overview';
+
+// Education 1:N keys
+const EDU_JOBS_KEY    = 'education_jobs';
+const EDU_COURSES_KEY = 'education_courses';
+
+const TAB_LABELS = {
+  overview: '과정개요',
+  job:      '전문분야',
+  edu:      '전문분야별 과정',
+  survey:   '설문결과',
+  proposal: '교육제안',
+  vision:   '연관조직',
+};
+
+/* ============================================================
+   MODAL FORM TEMPLATES
+   ============================================================ */
+const MODAL_FORMS = {
+  job: `
+    <div class="field">
+      <label>직무명 <span class="char-counter"><span id="job-name-c">0</span>/30</span></label>
+      <input type="text" id="job-name" maxlength="30" placeholder="예) HRD 기획자" />
+    </div>
+    <div class="field">
+      <label>직무정의 <span class="char-counter"><span id="job-def-c">0</span>/200</span></label>
+      <textarea id="job-def" rows="3" maxlength="200" placeholder="직무에 대한 정의를 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>주요업무 <span class="char-counter"><span id="job-main-c">0</span>/200</span></label>
+      <textarea id="job-main" rows="3" maxlength="200" placeholder="주요 업무 내용을 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>업무내용 <span class="char-counter"><span id="job-detail-c">0</span>/200</span></label>
+      <textarea id="job-detail" rows="3" maxlength="200" placeholder="세부 업무 내용을 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>전문지식 <span class="char-counter"><span id="job-knowledge-c">0</span>/200</span></label>
+      <textarea id="job-knowledge" rows="3" maxlength="200" placeholder="요구되는 전문 지식을 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>Skill / Tool <span class="char-counter"><span id="job-skill-c">0</span>/200</span></label>
+      <textarea id="job-skill" rows="3" maxlength="200" placeholder="활용 스킬 및 도구를 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>업무경험 <span class="char-counter"><span id="job-exp-c">0</span>/200</span></label>
+      <textarea id="job-exp" rows="3" maxlength="200" placeholder="요구되는 업무 경험을 입력하세요."></textarea>
+    </div>`,
+
+  eduJob: `
+    <div class="field">
+      <label>직무명 <span class="char-counter"><span id="edujob-name-c">0</span>/30</span></label>
+      <input type="text" id="edujob-name" maxlength="30" placeholder="예) 인사관리" />
+    </div>`,
+
+  eduCourse: `
+    <div class="field">
+      <label>과정명 <span class="char-counter"><span id="edu-course-c">0</span>/200</span></label>
+      <input type="text" id="edu-course" maxlength="200" placeholder="예) 채용 프로세스 이해" />
+    </div>
+    <div class="field">
+      <label>교육목표 <span class="char-counter"><span id="edu-goal-c">0</span>/200</span></label>
+      <textarea id="edu-goal" rows="3" maxlength="200" placeholder="교육 목표를 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>교육대상 <span class="char-counter"><span id="edu-target-c">0</span>/200</span></label>
+      <textarea id="edu-target" rows="3" maxlength="200" placeholder="교육 대상을 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>세부내용 <span class="char-counter"><span id="edu-detail-c">0</span>/200</span></label>
+      <textarea id="edu-detail" rows="3" maxlength="200" placeholder="교육 세부 내용을 입력하세요."></textarea>
+    </div>`,
+
+  survey: `
+    <div class="field">
+      <label>설문명 <span class="char-counter"><span id="survey-name-c">0</span>/100</span></label>
+      <input type="text" id="survey-name" maxlength="100" placeholder="예) 2025 역량 진단 설문" />
+    </div>
+    <div class="field">
+      <label>응답결과 <span class="char-counter"><span id="survey-result-c">0</span>/1000</span></label>
+      <textarea id="survey-result" rows="10" maxlength="1000" placeholder="설문 응답 결과를 입력하세요. (최대 1000자)"></textarea>
+    </div>`,
+
+  proposal: `
+    <div class="field">
+      <label>제안 과정명 <span class="char-counter"><span id="proposal-name-c">0</span>/30</span></label>
+      <input type="text" id="proposal-name" maxlength="30" placeholder="예) AI 리터러시 기초 과정" />
+    </div>
+    <div class="field">
+      <label>개설 필요성 / 배경 <span class="char-counter"><span id="proposal-reason-c">0</span>/200</span></label>
+      <textarea id="proposal-reason" rows="3" maxlength="200" placeholder="과정 개설의 필요성과 배경을 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>기대효과 및 목표 <span class="char-counter"><span id="proposal-effect-c">0</span>/200</span></label>
+      <textarea id="proposal-effect" rows="3" maxlength="200" placeholder="교육을 통해 기대되는 효과와 목표를 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>주요 커리큘럼 <span class="char-counter"><span id="proposal-curriculum-c">0</span>/200</span></label>
+      <textarea id="proposal-curriculum" rows="3" maxlength="200" placeholder="주요 커리큘럼 내용을 입력하세요."></textarea>
+    </div>`,
+
+  vision: `
+    <div class="field">
+      <label>조직명 <span class="char-counter"><span id="vision-name-c">0</span>/30</span></label>
+      <input type="text" id="vision-name" maxlength="30" placeholder="예) 인재개발팀" />
+    </div>
+    <div class="field">
+      <label>조직 목표 <span class="char-counter"><span id="vision-goal-c">0</span>/200</span></label>
+      <textarea id="vision-goal" rows="3" maxlength="200" placeholder="조직의 목표를 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>핵심 직무 <span class="char-counter"><span id="vision-job-c">0</span>/200</span></label>
+      <textarea id="vision-job" rows="3" maxlength="200" placeholder="조직의 핵심 직무를 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>역량 / 스킬 <span class="char-counter"><span id="vision-skill-c">0</span>/200</span></label>
+      <textarea id="vision-skill" rows="3" maxlength="200" placeholder="요구 역량 및 스킬을 입력하세요."></textarea>
+    </div>
+    <div class="field">
+      <label>교육 방향 <span class="char-counter"><span id="vision-direction-c">0</span>/200</span></label>
+      <textarea id="vision-direction" rows="3" maxlength="200" placeholder="교육의 방향성을 입력하세요."></textarea>
+    </div>`,
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let state = {
+  currentTab:   'overview',
+  modelIndex:   0,
+  currentModel: FREE_MODELS[0],
+  modal: {
+    tab:       null,
+    editingId: null,
+  },
+  generating:   false,
+};
+
+/* ============================================================
+   UTILS — localStorage
+   ============================================================ */
+function loadRecords(tab) {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS[tab]) || '[]');
+  } catch { return []; }
+}
+
+function saveRecords(tab, records) {
+  localStorage.setItem(STORAGE_KEYS[tab], JSON.stringify(records));
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+/* ── 과정개요 단일 레코드 helpers ── */
+function loadOverview() {
+  try {
+    const raw = localStorage.getItem(OVERVIEW_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function saveOverview(data) {
+  localStorage.setItem(OVERVIEW_KEY, JSON.stringify(data));
+}
+function deleteOverview() {
+  localStorage.removeItem(OVERVIEW_KEY);
+}
+
+/* ── Education 1:N helpers ── */
+function loadEduJobs() {
+  try { return JSON.parse(localStorage.getItem(EDU_JOBS_KEY) || '[]'); } catch { return []; }
+}
+function saveEduJobs(jobs) {
+  localStorage.setItem(EDU_JOBS_KEY, JSON.stringify(jobs));
+}
+function loadEduCourses() {
+  try { return JSON.parse(localStorage.getItem(EDU_COURSES_KEY) || '[]'); } catch { return []; }
+}
+function saveEduCourses(courses) {
+  localStorage.setItem(EDU_COURSES_KEY, JSON.stringify(courses));
+}
+
+/* ============================================================
+   UTILS — Toast
+   ============================================================ */
+const TOAST_ICONS = {
+  success: `<svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+  error:   `<svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+  info:    `<svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+  warning: `<svg class="toast-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+};
+
+function toast(message, type = 'info', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = (TOAST_ICONS[type] || '') + `<span>${escapeHtml(message)}</span>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .3s, transform .3s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px)';
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+/* ============================================================
+   UTILS — Confirm Dialog
+   ============================================================ */
+function confirmDialog(title, msg) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('confirm-overlay');
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-msg').textContent   = msg;
+    overlay.classList.add('open');
+
+    function cleanup(result) {
+      overlay.classList.remove('open');
+      document.getElementById('confirm-ok').onclick     = null;
+      document.getElementById('confirm-cancel').onclick = null;
+      resolve(result);
+    }
+
+    document.getElementById('confirm-ok').onclick     = () => cleanup(true);
+    document.getElementById('confirm-cancel').onclick = () => cleanup(false);
+  });
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+function openModal(tab, editingId, extraData) {
+  state.modal.tab       = tab;
+  state.modal.editingId = editingId || null;
+  state.modal.extraData = extraData || null; // e.g. { jobId } for eduCourse
+
+  const isEdit = !!editingId;
+
+  // Determine form key and title
+  let formKey, titleLabel;
+  if (tab === 'eduJob') {
+    formKey = 'eduJob';
+    titleLabel = isEdit ? '전문분야 수정' : '전문분야 추가';
+  } else if (tab === 'eduCourse') {
+    formKey = 'eduCourse';
+    titleLabel = isEdit ? '과정 수정' : '과정 추가';
+  } else {
+    formKey = tab;
+    titleLabel = `${TAB_LABELS[tab] || tab} ${isEdit ? '수정' : '추가'}`;
+  }
+
+  document.getElementById('modal-title').textContent = titleLabel;
+  document.getElementById('modal-body').innerHTML = MODAL_FORMS[formKey] || '';
+
+  initCharCountersInEl(document.getElementById('modal-body'));
+
+  // Prefill if editing
+  if (isEdit) {
+    if (tab === 'eduJob') {
+      const job = loadEduJobs().find(j => j.id === editingId);
+      if (job) {
+        const el = document.getElementById('edujob-name');
+        if (el) { el.value = job.job_name || ''; el.dispatchEvent(new Event('input')); }
+      }
+    } else if (tab === 'eduCourse') {
+      const course = loadEduCourses().find(c => c.id === editingId);
+      if (course) {
+        const s = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) { el.value = val || ''; el.dispatchEvent(new Event('input')); }
+        };
+        s('edu-course', course.course_name);
+        s('edu-goal',   course.education_goal);
+        s('edu-target', course.target_audience);
+        s('edu-detail', course.details);
+      }
+    } else {
+      const record = loadRecords(tab).find(r => r.id === editingId);
+      if (record) setFormData(tab, record);
+    }
+  }
+
+  const saveBtn = document.getElementById('modal-save-btn');
+  saveBtn.innerHTML = isEdit
+    ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> 수정 완료`
+    : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 저장`;
+
+  document.getElementById('modal-overlay').classList.add('open');
+
+  const firstInput = document.getElementById('modal-body').querySelector('input, textarea');
+  if (firstInput) setTimeout(() => firstInput.focus(), 60);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  state.modal.tab       = null;
+  state.modal.editingId = null;
+  state.modal.extraData = null;
+}
+
+function initModal() {
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+  document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
+
+  // Click on dimmed overlay closes modal
+  document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  });
+
+  document.getElementById('modal-save-btn').addEventListener('click', () => {
+    const tab = state.modal.tab;
+    if (!tab) return;
+    saveRecord(tab);
+  });
+}
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+function initTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  // Add record buttons (non-edu tabs)
+  document.querySelectorAll('.btn-add-record').forEach(btn => {
+    btn.addEventListener('click', () => openModal(btn.dataset.tab, null));
+  });
+
+  // Education: + 직무 추가
+  const addEduJobBtn = document.querySelector('.btn-add-edu-job');
+  if (addEduJobBtn) {
+    addEduJobBtn.addEventListener('click', () => openModal('eduJob', null));
+  }
+}
+
+function switchTab(tab) {
+  state.currentTab = tab;
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const isActive = btn.dataset.tab === tab;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive);
+  });
+
+  document.querySelectorAll('.tab-pane').forEach(pane => {
+    pane.style.display = pane.id === `tab-${tab}` ? 'block' : 'none';
+  });
+}
+
+/* ============================================================
+   CHAR COUNTERS
+   ============================================================ */
+const COUNTER_DEFS = [
+  ['job-name',              'job-name-c',              30],
+  ['job-def',               'job-def-c',               200],
+  ['job-main',              'job-main-c',              200],
+  ['job-detail',            'job-detail-c',            200],
+  ['job-knowledge',         'job-knowledge-c',         200],
+  ['job-skill',             'job-skill-c',             200],
+  ['job-exp',               'job-exp-c',               200],
+  ['edujob-name',           'edujob-name-c',           30],
+  ['edu-course',            'edu-course-c',            200],
+  ['edu-goal',              'edu-goal-c',              200],
+  ['edu-target',            'edu-target-c',            200],
+  ['edu-detail',            'edu-detail-c',            200],
+  ['survey-name',           'survey-name-c',           100],
+  ['survey-result',         'survey-result-c',         1000],
+  ['proposal-name',         'proposal-name-c',         30],
+  ['proposal-reason',       'proposal-reason-c',       200],
+  ['proposal-effect',       'proposal-effect-c',       200],
+  ['proposal-curriculum',   'proposal-curriculum-c',   200],
+  ['vision-name',           'vision-name-c',           30],
+  ['vision-goal',           'vision-goal-c',           200],
+  ['vision-job',            'vision-job-c',            200],
+  ['vision-skill',          'vision-skill-c',          200],
+  ['vision-direction',      'vision-direction-c',      200],
+];
+
+function initCharCountersInEl(root) {
+  COUNTER_DEFS.forEach(([inputId, counterId, maxLen]) => {
+    const input   = root.querySelector('#' + inputId);
+    const counter = root.querySelector('#' + counterId);
+    if (!input || !counter) return;
+    const wrap = counter.closest('.char-counter');
+    const update = () => {
+      const len = input.value.length;
+      counter.textContent = len;
+      if (wrap) {
+        wrap.classList.toggle('near-limit', len >= maxLen * 0.85 && len < maxLen);
+        wrap.classList.toggle('at-limit',   len >= maxLen);
+      }
+    };
+    input.addEventListener('input', update);
+    update();
+  });
+}
+
+/* ============================================================
+   FORM HELPERS
+   ============================================================ */
+function getFormData(tab) {
+  const g = id => (document.getElementById(id) || {}).value || '';
+  switch (tab) {
+    case 'job': return {
+      name:       g('job-name'),
+      definition: g('job-def'),
+      mainWork:   g('job-main'),
+      detail:     g('job-detail'),
+      knowledge:  g('job-knowledge'),
+      skill:      g('job-skill'),
+      experience: g('job-exp'),
+    };
+    case 'edu': return {
+      name:   g('edu-name'),
+      course: g('edu-course'),
+      goal:   g('edu-goal'),
+      target: g('edu-target'),
+      detail: g('edu-detail'),
+    };
+    case 'survey': return {
+      name:   g('survey-name'),
+      result: g('survey-result'),
+    };
+    case 'proposal': return {
+      name:       g('proposal-name'),
+      reason:     g('proposal-reason'),
+      effect:     g('proposal-effect'),
+      curriculum: g('proposal-curriculum'),
+    };
+    case 'vision': return {
+      name:      g('vision-name'),
+      goal:      g('vision-goal'),
+      coreJob:   g('vision-job'),
+      skill:     g('vision-skill'),
+      direction: g('vision-direction'),
+    };
+    default: return {};
+  }
+}
+
+function setFormData(tab, data) {
+  const s = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) { el.value = val || ''; el.dispatchEvent(new Event('input')); }
+  };
+  switch (tab) {
+    case 'job':
+      s('job-name', data.name); s('job-def', data.definition); s('job-main', data.mainWork);
+      s('job-detail', data.detail); s('job-knowledge', data.knowledge);
+      s('job-skill', data.skill); s('job-exp', data.experience);
+      break;
+    case 'edu':
+      s('edu-name', data.name); s('edu-course', data.course); s('edu-goal', data.goal);
+      s('edu-target', data.target); s('edu-detail', data.detail);
+      break;
+    case 'survey':
+      s('survey-name', data.name); s('survey-result', data.result);
+      break;
+    case 'proposal':
+      s('proposal-name', data.name); s('proposal-reason', data.reason);
+      s('proposal-effect', data.effect); s('proposal-curriculum', data.curriculum);
+      break;
+    case 'vision':
+      s('vision-name', data.name); s('vision-goal', data.goal); s('vision-job', data.coreJob);
+      s('vision-skill', data.skill); s('vision-direction', data.direction);
+      break;
+  }
+}
+
+function validateRequired(tab, data) {
+  if (!data.name || data.name.trim() === '') {
+    const labels = { job: '직무명', edu: '직무명', survey: '설문명', proposal: '제안 과정명', vision: '조직명' };
+    toast(`'${labels[tab]}' 항목은 필수 입력입니다.`, 'error');
+    return false;
+  }
+  return true;
+}
+
+/* ============================================================
+   CRUD — Save / Edit / Delete
+   ============================================================ */
+function saveRecord(tab) {
+  // Education 1:N: eduJob
+  if (tab === 'eduJob') {
+    const nameEl = document.getElementById('edujob-name');
+    const jobName = (nameEl ? nameEl.value : '').trim();
+    if (!jobName) {
+      toast("'직무명' 항목은 필수 입력입니다.", 'error');
+      return;
+    }
+    const jobs = loadEduJobs();
+    const editingId = state.modal.editingId;
+    if (editingId) {
+      const idx = jobs.findIndex(j => j.id === editingId);
+      if (idx !== -1) {
+        jobs[idx] = { ...jobs[idx], job_name: jobName, updatedAt: new Date().toISOString() };
+        toast('전문분야가 수정되었습니다.', 'success');
+      }
+    } else {
+      jobs.push({ id: generateId(), job_name: jobName, created_at: new Date().toISOString() });
+      toast('전문분야가 저장되었습니다.', 'success');
+    }
+    saveEduJobs(jobs);
+    closeModal();
+    renderEduList();
+    updateChips();
+    updateTabDots();
+    return;
+  }
+
+  // Education 1:N: eduCourse
+  if (tab === 'eduCourse') {
+    const courseEl = document.getElementById('edu-course');
+    const courseName = (courseEl ? courseEl.value : '').trim();
+    if (!courseName) {
+      toast("'과정명' 항목은 필수 입력입니다.", 'error');
+      return;
+    }
+    const g = id => (document.getElementById(id) || {}).value || '';
+    const courses = loadEduCourses();
+    const editingId = state.modal.editingId;
+    if (editingId) {
+      const idx = courses.findIndex(c => c.id === editingId);
+      if (idx !== -1) {
+        courses[idx] = {
+          ...courses[idx],
+          course_name:      courseName,
+          education_goal:   g('edu-goal'),
+          target_audience:  g('edu-target'),
+          details:          g('edu-detail'),
+          updatedAt: new Date().toISOString(),
+        };
+        toast('과정이 수정되었습니다.', 'success');
+      }
+    } else {
+      const jobId = state.modal.extraData && state.modal.extraData.jobId;
+      if (!jobId) { toast('직무 정보를 찾을 수 없습니다.', 'error'); return; }
+      courses.push({
+        id: generateId(),
+        job_id:          jobId,
+        course_name:     courseName,
+        education_goal:  g('edu-goal'),
+        target_audience: g('edu-target'),
+        details:         g('edu-detail'),
+        created_at:      new Date().toISOString(),
+      });
+      toast('과정이 저장되었습니다.', 'success');
+    }
+    saveEduCourses(courses);
+    closeModal();
+    renderEduList();
+    updateChips();
+    updateTabDots();
+    return;
+  }
+
+  // Standard tabs
+  const data = getFormData(tab);
+  if (!validateRequired(tab, data)) return;
+
+  const records = loadRecords(tab);
+  const editingId = state.modal.editingId;
+
+  if (editingId) {
+    const idx = records.findIndex(r => r.id === editingId);
+    if (idx !== -1) {
+      records[idx] = { ...records[idx], ...data, updatedAt: new Date().toISOString() };
+      toast('수정되었습니다.', 'success');
+    }
+  } else {
+    records.push({ id: generateId(), ...data, createdAt: new Date().toISOString() });
+    toast('저장되었습니다.', 'success');
+  }
+
+  saveRecords(tab, records);
+  closeModal();
+  renderList(tab);
+  updateChips();
+  updateTabDots();
+}
+
+function editRecord(tab, id) {
+  openModal(tab, id);
+}
+
+async function deleteEduJob(jobId) {
+  const courses = loadEduCourses().filter(c => c.job_id === jobId);
+  const childCount = courses.length;
+  const msg = childCount > 0
+    ? `이 전문분야를 삭제하시겠습니까? 하위 과정 ${childCount}개도 함께 삭제됩니다. 삭제 후에는 복구할 수 없습니다.`
+    : '이 전문분야를 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.';
+  const confirmed = await confirmDialog('전문분야 삭제', msg);
+  if (!confirmed) return;
+
+  saveEduJobs(loadEduJobs().filter(j => j.id !== jobId));
+  saveEduCourses(loadEduCourses().filter(c => c.job_id !== jobId));
+
+  toast('전문분야와 하위 과정이 삭제되었습니다.', 'info');
+  renderEduList();
+  updateChips();
+  updateTabDots();
+}
+
+async function deleteEduCourse(courseId) {
+  const confirmed = await confirmDialog('과정 삭제', '이 과정을 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.');
+  if (!confirmed) return;
+
+  saveEduCourses(loadEduCourses().filter(c => c.id !== courseId));
+
+  toast('과정이 삭제되었습니다.', 'info');
+  renderEduList();
+  updateChips();
+  updateTabDots();
+}
+
+async function deleteRecord(tab, id) {
+  const confirmed = await confirmDialog('항목 삭제', '이 항목을 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.');
+  if (!confirmed) return;
+
+  let records = loadRecords(tab).filter(r => r.id !== id);
+  saveRecords(tab, records);
+
+  toast('삭제되었습니다.', 'info');
+  renderList(tab);
+  updateChips();
+  updateTabDots();
+}
+
+/* ============================================================
+   RENDER — Record Lists
+   ============================================================ */
+function getRecordLabel(tab, record) {
+  return record.name || '(이름 없음)';
+}
+
+function getRecordSub(tab, record) {
+  const truncate = (str, n) => str ? (str.length > n ? str.slice(0, n) + '…' : str) : '';
+  switch (tab) {
+    case 'job':      return truncate(record.definition, 50);
+    case 'edu':      return truncate(record.course,     50);
+    case 'survey':   return truncate(record.result,     50);
+    case 'proposal': return truncate(record.reason,     50);
+    case 'vision':   return truncate(record.goal,       50);
+    default: return '';
+  }
+}
+
+function getRecordFields(tab, record) {
+  switch (tab) {
+    case 'job': return [
+      { label: '직무정의',   value: record.definition },
+      { label: '주요업무',   value: record.mainWork   },
+      { label: '업무내용',   value: record.detail     },
+      { label: '전문지식',   value: record.knowledge  },
+      { label: 'Skill / Tool', value: record.skill    },
+      { label: '업무경험',   value: record.experience },
+    ];
+    case 'survey': return [
+      { label: '응답결과', value: record.result },
+    ];
+    case 'proposal': return [
+      { label: '개설 필요성 / 배경', value: record.reason     },
+      { label: '기대효과 및 목표',   value: record.effect     },
+      { label: '주요 커리큘럼',      value: record.curriculum },
+    ];
+    case 'vision': return [
+      { label: '조직 목표', value: record.goal      },
+      { label: '핵심 직무', value: record.coreJob   },
+      { label: '역량 / 스킬', value: record.skill   },
+      { label: '교육 방향', value: record.direction },
+    ];
+    default: return [];
+  }
+}
+
+function renderList(tab) {
+  const container = document.getElementById(`${tab}-list`);
+  const badge     = document.getElementById(`${tab}-count-badge`);
+  if (!container) return;
+
+  const records = loadRecords(tab);
+
+  if (badge) badge.textContent = `${records.length}건`;
+
+  if (records.length === 0) {
+    container.innerHTML = `
+      <div class="record-empty" aria-live="polite">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--gray-300)">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>등록된 데이터가 없습니다.</p>
+        <small>추가 버튼을 눌러 입력하세요.</small>
+      </div>`;
+    return;
+  }
+
+  const svgEdit = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const svgDel  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`;
+
+  container.innerHTML = records.map((record, idx) => {
+    const label  = getRecordLabel(tab, record);
+    const fields = getRecordFields(tab, record);
+    const fieldHtml = fields
+      .filter(f => f.value)
+      .map((f, fi, arr) => `
+        <div class="overview-field"${fi === arr.length - 1 ? ' style="border-bottom:none;"' : ''}>
+          <div class="overview-field-label">${escapeHtml(f.label)}</div>
+          <div class="overview-field-value">${escapeHtml(f.value)}</div>
+        </div>`)
+      .join('');
+    const createdAt = record.createdAt || record.created_at || '';
+    return `
+      <div class="overview-card" style="margin-bottom:12px;" data-id="${record.id}">
+        <div class="overview-card-header">
+          <h2 class="overview-card-title">${escapeHtml(label)}</h2>
+          <div class="overview-card-actions">
+            <button class="btn btn-ghost btn-sm edit-btn" data-id="${record.id}" aria-label="${escapeHtml(label)} 수정">${svgEdit} 수정</button>
+            <button class="btn btn-danger-ghost btn-sm del-btn" data-id="${record.id}" aria-label="${escapeHtml(label)} 삭제">${svgDel} 삭제</button>
+          </div>
+        </div>
+        <div class="overview-card-body">${fieldHtml}</div>
+        ${createdAt ? `<div class="overview-card-footer">등록일: ${formatDate(createdAt)}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  container.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); editRecord(tab, btn.dataset.id); });
+  });
+  container.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); deleteRecord(tab, btn.dataset.id); });
+  });
+}
+
+/* ── 과정개요 단일 레코드 render ── */
+function renderOverview() {
+  const container = document.getElementById('overview-content');
+  if (!container) return;
+
+  const data = loadOverview();
+
+  if (!data) {
+    // 데이터 없음: 입력 폼 표시
+    container.innerHTML = `
+      <form id="overview-form" novalidate>
+        <div class="field">
+          <label for="ov-name">과정명 <span class="char-counter"><span id="ov-name-c">0</span>/30</span></label>
+          <input type="text" id="ov-name" maxlength="30" placeholder="예) HRD 핵심 역량 강화 과정" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="ov-goal">교육목표 <span class="char-counter"><span id="ov-goal-c">0</span>/200</span></label>
+          <textarea id="ov-goal" rows="4" maxlength="200" placeholder="이 과정을 통해 달성하고자 하는 교육 목표를 입력하세요."></textarea>
+        </div>
+        <div class="field">
+          <label for="ov-target">교육대상 <span class="char-counter"><span id="ov-target-c">0</span>/200</span></label>
+          <textarea id="ov-target" rows="3" maxlength="200" placeholder="교육 대상자를 입력하세요. 예) 입사 3년차 이하 HRD 담당자"></textarea>
+        </div>
+        <div class="field">
+          <label for="ov-detail">세부내용 <span class="char-counter"><span id="ov-detail-c">0</span>/200</span></label>
+          <textarea id="ov-detail" rows="4" maxlength="200" placeholder="과정의 세부 내용을 입력하세요."></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+          <button type="button" class="btn btn-success" id="overview-save-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            저장
+          </button>
+        </div>
+      </form>`;
+
+    // 글자 수 카운터 초기화
+    initOverviewCounters(container);
+
+    document.getElementById('overview-save-btn').addEventListener('click', () => {
+      const name   = (document.getElementById('ov-name').value   || '').trim();
+      const goal   = (document.getElementById('ov-goal').value   || '').trim();
+      const target = (document.getElementById('ov-target').value || '').trim();
+      const detail = (document.getElementById('ov-detail').value || '').trim();
+      if (!name) { toast("'과정명' 항목은 필수 입력입니다.", 'error'); return; }
+      const record = {
+        id:              generateId(),
+        course_name:     name,
+        education_goal:  goal,
+        target_audience: target,
+        details:         detail,
+        created_at:      new Date().toISOString(),
+      };
+      saveOverview(record);
+      toast('과정개요가 저장되었습니다.', 'success');
+      renderOverview();
+      updateChips();
+      updateTabDots();
+    });
+
+    return;
+  }
+
+  // 데이터 있음: 카드 표시
+  container.innerHTML = `
+    <div id="overview-card" class="overview-card">
+      <div class="overview-card-header">
+        <h2 class="overview-card-title">${escapeHtml(data.course_name)}</h2>
+        <div class="overview-card-actions">
+          <button class="btn btn-ghost btn-sm" id="overview-edit-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            수정
+          </button>
+          <button class="btn btn-danger-ghost btn-sm" id="overview-delete-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            삭제
+          </button>
+        </div>
+      </div>
+      <div class="overview-card-body">
+        ${renderOverviewField('교육목표', data.education_goal)}
+        ${renderOverviewField('교육대상', data.target_audience)}
+        ${renderOverviewField('세부내용', data.details)}
+      </div>
+      <div class="overview-card-footer">등록일: ${formatDate(data.created_at)}</div>
+    </div>`;
+
+  document.getElementById('overview-edit-btn').addEventListener('click', () => {
+    showOverviewEditForm(data);
+  });
+  document.getElementById('overview-delete-btn').addEventListener('click', async () => {
+    const confirmed = await confirmDialog('과정개요 삭제', '과정개요를 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.');
+    if (!confirmed) return;
+    deleteOverview();
+    toast('과정개요가 삭제되었습니다.', 'info');
+    renderOverview();
+    updateChips();
+    updateTabDots();
+  });
+}
+
+function renderOverviewField(label, value) {
+  if (!value) return '';
+  return `
+    <div class="overview-field">
+      <div class="overview-field-label">${escapeHtml(label)}</div>
+      <div class="overview-field-value">${escapeHtml(value)}</div>
+    </div>`;
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  } catch { return iso; }
+}
+
+function showOverviewEditForm(data) {
+  const container = document.getElementById('overview-content');
+  if (!container) return;
+
+  container.innerHTML = `
+    <form id="overview-form" novalidate>
+      <div class="field">
+        <label for="ov-name">과정명 <span class="char-counter"><span id="ov-name-c">0</span>/30</span></label>
+        <input type="text" id="ov-name" maxlength="30" placeholder="예) HRD 핵심 역량 강화 과정" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="ov-goal">교육목표 <span class="char-counter"><span id="ov-goal-c">0</span>/200</span></label>
+        <textarea id="ov-goal" rows="4" maxlength="200" placeholder="이 과정을 통해 달성하고자 하는 교육 목표를 입력하세요."></textarea>
+      </div>
+      <div class="field">
+        <label for="ov-target">교육대상 <span class="char-counter"><span id="ov-target-c">0</span>/200</span></label>
+        <textarea id="ov-target" rows="3" maxlength="200" placeholder="교육 대상자를 입력하세요. 예) 입사 3년차 이하 HRD 담당자"></textarea>
+      </div>
+      <div class="field">
+        <label for="ov-detail">세부내용 <span class="char-counter"><span id="ov-detail-c">0</span>/200</span></label>
+        <textarea id="ov-detail" rows="4" maxlength="200" placeholder="과정의 세부 내용을 입력하세요."></textarea>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+        <button type="button" class="btn btn-ghost" id="overview-cancel-btn">취소</button>
+        <button type="button" class="btn btn-success" id="overview-save-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          저장 완료
+        </button>
+      </div>
+    </form>`;
+
+  // 기존 데이터 채우기
+  const s = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) { el.value = val || ''; el.dispatchEvent(new Event('input')); }
+  };
+  s('ov-name',   data.course_name);
+  s('ov-goal',   data.education_goal);
+  s('ov-target', data.target_audience);
+  s('ov-detail', data.details);
+
+  initOverviewCounters(container);
+
+  document.getElementById('overview-cancel-btn').addEventListener('click', () => renderOverview());
+
+  document.getElementById('overview-save-btn').addEventListener('click', () => {
+    const name   = (document.getElementById('ov-name').value   || '').trim();
+    const goal   = (document.getElementById('ov-goal').value   || '').trim();
+    const target = (document.getElementById('ov-target').value || '').trim();
+    const detail = (document.getElementById('ov-detail').value || '').trim();
+    if (!name) { toast("'과정명' 항목은 필수 입력입니다.", 'error'); return; }
+    const record = {
+      ...data,
+      course_name:     name,
+      education_goal:  goal,
+      target_audience: target,
+      details:         detail,
+      updated_at:      new Date().toISOString(),
+    };
+    saveOverview(record);
+    toast('과정개요가 수정되었습니다.', 'success');
+    renderOverview();
+    updateChips();
+    updateTabDots();
+  });
+}
+
+function initOverviewCounters(root) {
+  const defs = [
+    ['ov-name',   'ov-name-c',   30],
+    ['ov-goal',   'ov-goal-c',   200],
+    ['ov-target', 'ov-target-c', 200],
+    ['ov-detail', 'ov-detail-c', 200],
+  ];
+  defs.forEach(([inputId, counterId, maxLen]) => {
+    const input   = root.querySelector('#' + inputId);
+    const counter = root.querySelector('#' + counterId);
+    if (!input || !counter) return;
+    const wrap = counter.closest('.char-counter');
+    const update = () => {
+      const len = input.value.length;
+      counter.textContent = len;
+      if (wrap) {
+        wrap.classList.toggle('near-limit', len >= maxLen * 0.85 && len < maxLen);
+        wrap.classList.toggle('at-limit',   len >= maxLen);
+      }
+    };
+    input.addEventListener('input', update);
+    update();
+  });
+}
+
+/* ── Education 1:N render ── */
+function renderEduList() {
+  const container = document.getElementById('edu-list');
+  const badge     = document.getElementById('edu-count-badge');
+  if (!container) return;
+
+  const jobs    = loadEduJobs();
+  const courses = loadEduCourses();
+
+  // badge shows number of jobs
+  if (badge) badge.textContent = `${jobs.length}건`;
+
+  if (jobs.length === 0) {
+    container.innerHTML = `
+      <div class="record-empty" aria-live="polite">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--gray-300)">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>등록된 전문분야가 없습니다.</p>
+        <small>'+ 추가' 버튼을 눌러 입력하세요.</small>
+      </div>`;
+    return;
+  }
+
+  const svgPlus  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  const svgEdit  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const svgDel   = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`;
+
+  container.innerHTML = jobs.map(job => {
+    const jobCourses = courses.filter(c => c.job_id === job.id);
+
+    const courseCards = jobCourses.map(course => {
+      const courseFields = [
+        { label: '교육목표', value: course.education_goal  },
+        { label: '교육대상', value: course.target_audience },
+        { label: '세부내용', value: course.details         },
+      ].filter(f => f.value);
+
+      const courseFieldHtml = courseFields.map((f, fi, arr) => `
+        <div class="overview-field"${fi === arr.length - 1 ? ' style="border-bottom:none;"' : ''}>
+          <div class="overview-field-label">${escapeHtml(f.label)}</div>
+          <div class="overview-field-value">${escapeHtml(f.value)}</div>
+        </div>`).join('');
+
+      const courseCreated = course.created_at || '';
+      return `
+        <div class="overview-card" style="margin:0 0 10px 24px; border-left:3px solid var(--blue-300);" data-course-id="${course.id}">
+          <div class="overview-card-header">
+            <h3 class="overview-card-title" style="font-size:16px;">${escapeHtml(course.course_name)}</h3>
+            <div class="overview-card-actions">
+              <button class="btn btn-ghost btn-sm edit-course-btn" data-course-id="${course.id}" aria-label="${escapeHtml(course.course_name)} 수정">${svgEdit} 수정</button>
+              <button class="btn btn-danger-ghost btn-sm del-course-btn" data-course-id="${course.id}" aria-label="${escapeHtml(course.course_name)} 삭제">${svgDel} 삭제</button>
+            </div>
+          </div>
+          ${courseFieldHtml ? `<div class="overview-card-body">${courseFieldHtml}</div>` : ''}
+          ${courseCreated ? `<div class="overview-card-footer">등록일: ${formatDate(courseCreated)}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    const jobCreated = job.created_at || '';
+    return `
+      <div class="overview-card" style="margin-bottom:16px;" data-job-id="${job.id}">
+        <div class="overview-card-header">
+          <h2 class="overview-card-title">${escapeHtml(job.job_name)}</h2>
+          <div class="overview-card-actions">
+            <button class="btn btn-ghost btn-sm edit-job-btn" data-job-id="${job.id}" aria-label="${escapeHtml(job.job_name)} 수정">${svgEdit} 수정</button>
+            <button class="btn btn-danger-ghost btn-sm del-job-btn" data-job-id="${job.id}" aria-label="${escapeHtml(job.job_name)} 삭제">${svgDel} 삭제</button>
+          </div>
+        </div>
+        <div class="overview-card-body" style="padding-top:12px;">
+          ${courseCards}
+          <div style="padding:8px 0 0 24px;">
+            <button class="btn-add-course add-course-btn" data-job-id="${job.id}" aria-label="${escapeHtml(job.job_name)}에 과정 추가">
+              ${svgPlus} + 과정 추가
+            </button>
+          </div>
+        </div>
+        ${jobCreated ? `<div class="overview-card-footer">등록일: ${formatDate(jobCreated)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  // Bind events
+  container.querySelectorAll('.edit-job-btn').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); openModal('eduJob', btn.dataset.jobId); });
+  });
+  container.querySelectorAll('.del-job-btn').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); deleteEduJob(btn.dataset.jobId); });
+  });
+  container.querySelectorAll('.add-course-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      openModal('eduCourse', null, { jobId: btn.dataset.jobId });
+    });
+  });
+  container.querySelectorAll('.edit-course-btn').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); openModal('eduCourse', btn.dataset.courseId); });
+  });
+  container.querySelectorAll('.del-course-btn').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); deleteEduCourse(btn.dataset.courseId); });
+  });
+}
+
+function renderAllLists() {
+  renderOverview();
+  Object.keys(STORAGE_KEYS).forEach(tab => {
+    if (tab === 'edu') return; // edu uses its own render
+    renderList(tab);
+  });
+  renderEduList();
+}
+
+/* ============================================================
+   DATA SUMMARY CHIPS
+   ============================================================ */
+function updateChips() {
+  // 과정개요 칩 (단일 레코드)
+  const overviewChip = document.getElementById('chip-overview');
+  if (overviewChip) {
+    const hasOverview = loadOverview() !== null;
+    overviewChip.classList.toggle('has-data', hasOverview);
+    const overviewCheckIcon = overviewChip.querySelector('.chip-check-icon');
+    if (overviewCheckIcon) overviewCheckIcon.style.display = hasOverview ? 'block' : 'none';
+  }
+
+  const chipMap = { job: 'chip-job', survey: 'chip-survey', proposal: 'chip-proposal', vision: 'chip-vision' };
+  Object.entries(chipMap).forEach(([tab, chipId]) => {
+    const count = loadRecords(tab).length;
+    const chip  = document.getElementById(chipId);
+    if (!chip) return;
+
+    chip.querySelector('.chip-count').textContent = `(${count}건)`;
+    const hasData = count > 0;
+    chip.classList.toggle('has-data', hasData);
+
+    const checkIcon = chip.querySelector('.chip-check-icon');
+    if (checkIcon) checkIcon.style.display = hasData ? 'block' : 'none';
+  });
+
+  // edu chip: count by jobs + courses
+  const eduChip = document.getElementById('chip-edu');
+  if (eduChip) {
+    const jobCount    = loadEduJobs().length;
+    const courseCount = loadEduCourses().length;
+    const total       = jobCount + courseCount;
+    eduChip.querySelector('.chip-count').textContent = jobCount > 0
+      ? `(직무 ${jobCount} / 과정 ${courseCount})`
+      : `(0건)`;
+    const hasData = total > 0;
+    eduChip.classList.toggle('has-data', hasData);
+    const checkIcon = eduChip.querySelector('.chip-check-icon');
+    if (checkIcon) checkIcon.style.display = hasData ? 'block' : 'none';
+  }
+}
+
+/* ============================================================
+   TAB DOTS (data indicator)
+   ============================================================ */
+function updateTabDots() {
+  // 과정개요 dot
+  const overviewBtn = document.querySelector('.tab-btn[data-tab="overview"]');
+  if (overviewBtn) {
+    overviewBtn.classList.toggle('has-data', loadOverview() !== null);
+  }
+
+  const tabs = ['job', 'survey', 'proposal', 'vision'];
+  tabs.forEach(tab => {
+    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    if (!btn) return;
+    const count = loadRecords(tab).length;
+    btn.classList.toggle('has-data', count > 0);
+  });
+  // edu dot
+  const eduBtn = document.querySelector('.tab-btn[data-tab="edu"]');
+  if (eduBtn) {
+    eduBtn.classList.toggle('has-data', loadEduJobs().length > 0);
+  }
+}
+
+/* ============================================================
+   HTML ESCAPE
+   ============================================================ */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ============================================================
+   AI PROMPT BUILDER
+   ============================================================ */
+function buildPrompt() {
+  const sections = [];
+
+  // 과정개요를 첫 번째 컨텍스트로 포함
+  const overview = loadOverview();
+  if (overview) {
+    sections.push('[과정개요]');
+    if (overview.course_name)     sections.push(`과정명: ${overview.course_name}`);
+    if (overview.education_goal)  sections.push(`교육목표: ${overview.education_goal}`);
+    if (overview.target_audience) sections.push(`교육대상: ${overview.target_audience}`);
+    if (overview.details)         sections.push(`세부내용: ${overview.details}`);
+  }
+
+  const jobs = loadRecords('job');
+  if (jobs.length > 0) {
+    sections.push('=== 전문분야 정보 ===');
+    jobs.forEach((r, i) => {
+      sections.push(`[전문분야 ${i + 1}] ${r.name}`);
+      if (r.definition)  sections.push(`직무정의: ${r.definition}`);
+      if (r.mainWork)    sections.push(`주요업무: ${r.mainWork}`);
+      if (r.detail)      sections.push(`업무내용: ${r.detail}`);
+      if (r.knowledge)   sections.push(`전문지식: ${r.knowledge}`);
+      if (r.skill)       sections.push(`Skill/Tool: ${r.skill}`);
+      if (r.experience)  sections.push(`업무경험: ${r.experience}`);
+    });
+  }
+
+  const eduJobs    = loadEduJobs();
+  const eduCourses = loadEduCourses();
+  if (eduJobs.length > 0) {
+    sections.push('=== 전문분야별 과정 정보 ===');
+    eduJobs.forEach(job => {
+      sections.push(`직무: ${job.job_name}`);
+      const jobCourses = eduCourses.filter(c => c.job_id === job.id);
+      if (jobCourses.length > 0) {
+        const courseNames = jobCourses.map(c => c.course_name).join(' / ');
+        sections.push(`  과정: ${courseNames}`);
+        jobCourses.forEach(c => {
+          if (c.education_goal)  sections.push(`  교육목표(${c.course_name}): ${c.education_goal}`);
+          if (c.target_audience) sections.push(`  교육대상(${c.course_name}): ${c.target_audience}`);
+          if (c.details)         sections.push(`  세부내용(${c.course_name}): ${c.details}`);
+        });
+      }
+    });
+  }
+
+  const surveys = loadRecords('survey');
+  if (surveys.length > 0) {
+    sections.push('=== 설문결과 정보 ===');
+    surveys.forEach((r, i) => {
+      sections.push(`[설문 ${i + 1}] ${r.name}`);
+      if (r.result) sections.push(`응답결과: ${r.result}`);
+    });
+  }
+
+  const proposals = loadRecords('proposal');
+  if (proposals.length > 0) {
+    sections.push('=== 교육제안 정보 ===');
+    proposals.forEach((r, i) => {
+      sections.push(`[교육제안 ${i + 1}] ${r.name}`);
+      if (r.reason)     sections.push(`개설 필요성/배경: ${r.reason}`);
+      if (r.effect)     sections.push(`기대효과 및 목표: ${r.effect}`);
+      if (r.curriculum) sections.push(`주요 커리큘럼: ${r.curriculum}`);
+    });
+  }
+
+  const visions = loadRecords('vision');
+  if (visions.length > 0) {
+    sections.push('=== 연관조직 정보 ===');
+    visions.forEach((r, i) => {
+      sections.push(`[연관조직 ${i + 1}] ${r.name}`);
+      if (r.goal)      sections.push(`조직 목표: ${r.goal}`);
+      if (r.coreJob)   sections.push(`핵심 직무: ${r.coreJob}`);
+      if (r.skill)     sections.push(`역량/스킬: ${r.skill}`);
+      if (r.direction) sections.push(`교육 방향: ${r.direction}`);
+    });
+  }
+
+  if (sections.length === 0) return null;
+
+  return `당신은 기업 교육 전문가입니다. 아래 제공된 데이터를 분석하여 학습목표를 생성해 주세요.
+
+${sections.join('\n')}
+
+위 데이터를 종합적으로 분석하여, 실무에 적용 가능한 구체적인 학습목표를 최대 10개 생성해 주세요.
+
+반드시 다음 JSON 형식으로만 응답하세요 (다른 설명이나 텍스트 없이):
+{
+  "objectives": [
+    {
+      "title": "학습목표 제목 (간결하고 명확하게, 명사형으로)",
+      "description": "학습목표에 대한 평서문 설명 (구체적인 행동 변화나 성과를 서술)"
+    }
+  ]
+}
+
+요구사항:
+- 학습목표 개수: 5개 이상 10개 이내
+- 제목: 10~30자 내외의 한국어 명사형 문장
+- 설명: 40~80자 내외의 한국어 평서문 (학습 후 할 수 있는 것을 서술)
+- 직무 현장성과 실무 적용 가능성을 최우선으로 고려
+- JSON 외 다른 텍스트는 절대 포함하지 말 것`;
+}
+
+/* ============================================================
+   AI CALL — Dynamic Model Fetch + Sequential Fallback + Groq
+   ============================================================ */
+
+const GROQ_API_KEY = 'YOUR_GROQ_API_KEY'; // 실제 키를 여기에 입력하세요
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODELS  = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+
+// 런타임에 조회된 무료 모델 목록 (최초 1회 캐시)
+let availableModels = null;
+
+async function fetchAvailableFreeModels() {
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${API_KEY}`,
+        'HTTP-Referer':  window.location.href,
+        'X-Title':       '과정 기획 자동화',
+      },
+    });
+    if (!response.ok) throw new Error(`모델 목록 조회 실패 (${response.status})`);
+    const data = await response.json();
+    const free = (data.data || [])
+      .map(m => m.id)
+      .filter(id => id.endsWith(':free'));
+    if (free.length === 0) throw new Error('무료 모델이 없습니다.');
+    return free;
+  } catch (err) {
+    console.warn('[fetchAvailableFreeModels]', err.message, '— 하드코딩 목록 사용');
+    return FREE_MODELS.slice(); // 폴백
+  }
+}
+
+async function callOpenRouter(prompt, models) {
+  const CHUNK_SIZE = 10;
+  for (let ci = 0; ci < models.length; ci += CHUNK_SIZE) {
+    const chunk = models.slice(ci, ci + CHUNK_SIZE);
+    for (const model of chunk) {
+      updateModelBadge(model, 'trying');
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${API_KEY}`,
+            'Content-Type':  'application/json',
+            'HTTP-Referer':  window.location.href,
+            'X-Title':       '과정 기획 자동화',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.7,
+            max_tokens: 2000,
+          }),
+        });
+
+        if (response.status === 429 || response.status === 503) {
+          toast(`모델 [${shortModelName(model)}] 한도 초과 — 다음 모델로 전환합니다.`, 'warning');
+          continue;
+        }
+        if (!response.ok) {
+          toast(`모델 [${shortModelName(model)}] 오류 (${response.status}) — 다음 모델 시도 중.`, 'warning');
+          continue;
+        }
+
+        const data    = await response.json();
+        const content = data?.choices?.[0]?.message?.content;
+        if (!content) {
+          toast(`모델 [${shortModelName(model)}] 응답이 비어있습니다 — 다음 모델 시도 중.`, 'warning');
+          continue;
+        }
+
+        state.currentModel = model;
+        updateModelBadge(model, 'ok');
+        return content;
+
+      } catch (err) {
+        toast(`모델 [${shortModelName(model)}] 네트워크 오류 — 다음 모델 시도 중.`, 'warning');
+        continue;
+      }
+    }
+  }
+  return null; // 모든 OpenRouter 모델 실패
+}
+
+async function callGroq(prompt) {
+  for (const model of GROQ_MODELS) {
+    const badge = document.getElementById('model-badge');
+    if (badge) {
+      badge.textContent = `시도 중: Groq: ${model}`;
+      badge.className   = 'trying';
+      badge.style.color      = '#92400E';
+      badge.style.borderColor = '#FCD34D';
+      badge.style.background  = '#FFFBEB';
+    }
+    toast(`OpenRouter 모델 전부 실패 — Groq [${model}] 폴백 시도 중.`, 'warning');
+
+    try {
+      const response = await fetch(GROQ_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type':  'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 2000,
+        }),
+      });
+
+      if (!response.ok) {
+        toast(`Groq [${model}] 오류 (${response.status}) — 다음 Groq 모델 시도 중.`, 'warning');
+        continue;
+      }
+
+      const data    = await response.json();
+      const content = data?.choices?.[0]?.message?.content;
+      if (!content) {
+        toast(`Groq [${model}] 응답이 비어있습니다 — 다음 Groq 모델 시도 중.`, 'warning');
+        continue;
+      }
+
+      // 성공 — 배지를 Groq 폴백 스타일로 표시
+      if (badge) {
+        badge.textContent      = `Groq 폴백: ${model}`;
+        badge.className        = '';
+        badge.style.color      = '#92400E';
+        badge.style.borderColor = '#FCD34D';
+        badge.style.background  = '#FFFBEB';
+      }
+      return content;
+
+    } catch (err) {
+      toast(`Groq [${model}] 네트워크 오류 — 다음 Groq 모델 시도 중.`, 'warning');
+      continue;
+    }
+  }
+  return null; // 모든 Groq 모델 실패
+}
+
+async function callAI(prompt) {
+  // 1) 무료 모델 목록 동적 조회 (첫 호출 시 캐시)
+  if (!availableModels) {
+    availableModels = await fetchAvailableFreeModels();
+  }
+
+  // 2) OpenRouter 무료 모델 순차 시도 (10개 청크)
+  const result = await callOpenRouter(prompt, availableModels);
+  if (result !== null) return result;
+
+  // 3) Groq 폴백
+  const groqResult = await callGroq(prompt);
+  if (groqResult !== null) return groqResult;
+
+  throw new Error('사용 가능한 AI 모델이 없습니다. 잠시 후 다시 시도해 주세요.');
+}
+
+function shortModelName(model) {
+  return model.split('/').pop().replace(':free', '');
+}
+
+function updateModelBadge(model, status) {
+  const badge = document.getElementById('model-badge');
+  if (!badge) return;
+  const name = shortModelName(model);
+  if (status === 'trying') {
+    badge.textContent       = `시도 중: ${name}`;
+    badge.className         = 'trying';
+    badge.style.color       = '';
+    badge.style.borderColor = '';
+    badge.style.background  = '';
+  } else {
+    badge.textContent       = `사용 모델: ${name}`;
+    badge.className         = '';
+    badge.style.color       = '';
+    badge.style.borderColor = '';
+    badge.style.background  = '';
+  }
+}
+
+/* ============================================================
+   PARSE AI RESPONSE
+   ============================================================ */
+function parseObjectives(content) {
+  let jsonStr = content;
+
+  const fenceMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) jsonStr = fenceMatch[1];
+
+  const objMatch = jsonStr.match(/\{[\s\S]*\}/);
+  if (objMatch) jsonStr = objMatch[0];
+
+  try {
+    const parsed = JSON.parse(jsonStr);
+    if (Array.isArray(parsed.objectives) && parsed.objectives.length > 0) {
+      return parsed.objectives.slice(0, 10);
+    }
+  } catch (e) { /* JSON parse failed — try fallback */ }
+
+  const lines      = content.split('\n').filter(l => l.trim());
+  const objectives = [];
+  let i = 0;
+  while (i < lines.length && objectives.length < 10) {
+    const line    = lines[i].trim();
+    const numbered = line.match(/^\d+[\.\)]\s+(.+)/);
+    if (numbered) {
+      const title = numbered[1].replace(/^\*\*|\*\*$/g, '').trim();
+      const desc  = (lines[i + 1] || '').trim().replace(/^[-–•]\s*/, '').replace(/^\*\*|\*\*$/g, '').trim();
+      if (title) {
+        objectives.push({ title, description: desc || title });
+        i += desc ? 2 : 1;
+        continue;
+      }
+    }
+    i++;
+  }
+
+  if (objectives.length > 0) return objectives;
+  throw new Error('AI 응답을 파싱할 수 없습니다. 다시 시도해 주세요.');
+}
+
+/* ============================================================
+   SUPABASE — Save Objectives
+   ============================================================ */
+async function saveObjectivesToDB(objectives) {
+  try {
+    // 1. 기존 데이터 전체 삭제
+    await supabaseClient.from('learning_objectives').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    // 2. 신규 데이터 Insert
+    const rows = objectives.map((obj, i) => ({
+      title:       obj.title.slice(0, 100),
+      description: obj.description.slice(0, 200),
+      sort_order:  i + 1,
+    }));
+    const { error } = await supabaseClient.from('learning_objectives').insert(rows);
+    if (error) throw error;
+    toast(`학습목표 ${rows.length}개가 DB에 저장되었습니다.`, 'success');
+  } catch (err) {
+    console.error('DB 저장 실패:', err);
+    toast('학습목표 DB 저장에 실패했습니다. 로컬에만 표시됩니다.', 'warning');
+  }
+}
+
+/* ============================================================
+   RENDER — Objectives
+   ============================================================ */
+function renderObjectives(objectives) {
+  const container = document.getElementById('objectives-container');
+
+  if (!objectives || objectives.length === 0) {
+    container.innerHTML = `
+      <div id="objectives-placeholder">
+        <div class="placeholder-icon" aria-hidden="true">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--blue-400)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="2"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="12" y2="16"/>
+          </svg>
+        </div>
+        <p>좌측에서 데이터를 입력하고<br />'학습목표 생성' 버튼을 눌러주세요.</p>
+        <small>입력된 데이터를 바탕으로 AI가 학습목표 10개 이내를 생성합니다.</small>
+      </div>`;
+    const cb = document.getElementById('objectives-count-badge');
+    if (cb) cb.style.display = 'none';
+    window._lastObjectives = null;
+    return;
+  }
+
+  // 마지막 학습목표 저장 (강사 추천 시 활용)
+  window._lastObjectives = objectives;
+
+  const total = objectives.length;
+
+  // 카운트 뱃지 업데이트
+  const countBadge = document.getElementById('objectives-count-badge');
+  if (countBadge) {
+    countBadge.textContent = `${total}개`;
+    countBadge.style.display = 'inline-flex';
+  }
+
+  const cards = objectives.map((obj, i) => `
+    <div class="objective-card"
+         style="animation: cardIn .3s ease ${(i * 0.06).toFixed(2)}s both;">
+      <div class="obj-number" aria-hidden="true">${i + 1}</div>
+      <div class="obj-body">
+        <div class="obj-title">${escapeHtml(obj.title)}</div>
+        <div class="obj-desc">${escapeHtml(obj.description)}</div>
+      </div>
+    </div>
+  `).join('');
+
+  container.innerHTML = cards;
+  // 스크롤을 상단으로 리셋
+  container.scrollTop = 0;
+}
+
+function showLoading() {
+  const container = document.getElementById('objectives-container');
+  container.innerHTML = `
+    <div class="loading-card" style="min-height:460px;">
+      <div class="spinner" role="status" aria-label="로딩 중"></div>
+      <p>AI가 학습목표를 생성하고 있습니다…</p>
+    </div>`;
+}
+
+function showProgressBar(active) {
+  const wrap = document.getElementById('progress-bar-wrap');
+  const bar  = document.getElementById('progress-bar');
+  if (active) {
+    wrap.style.display = 'block';
+    bar.style.width = '0%';
+    setTimeout(() => bar.style.width = '70%', 50);
+  } else {
+    bar.style.width = '100%';
+    setTimeout(() => {
+      wrap.style.display = 'none';
+      bar.style.width = '0%';
+    }, 400);
+  }
+}
+
+/* ============================================================
+   GENERATE HANDLER
+   ============================================================ */
+async function handleGenerate() {
+  if (state.generating) return;
+
+  const prompt = buildPrompt();
+  if (!prompt) {
+    toast('학습목표를 생성하려면 좌측에 데이터를 1건 이상 입력하고 저장해 주세요.', 'warning');
+    return;
+  }
+
+  state.generating = true;
+  const btn = document.getElementById('generate-btn');
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> 생성 중…`;
+
+  showLoading();
+  showProgressBar(true);
+
+  try {
+    const raw        = await callAI(prompt);
+    const objectives = parseObjectives(raw);
+    await saveObjectivesToDB(objectives);
+    renderObjectives(objectives);
+    toast(`학습목표 ${objectives.length}개가 생성되었습니다.`, 'success');
+  } catch (err) {
+    const container = document.getElementById('objectives-container');
+    container.innerHTML = `
+      <div id="objectives-placeholder" style="min-height:460px;">
+        <div class="placeholder-icon" aria-hidden="true" style="background:#FEF2F2;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <p style="color:#B91C1C;">${escapeHtml(err.message)}</p>
+        <small>좌측 데이터를 확인하거나 잠시 후 다시 시도해 주세요.</small>
+      </div>`;
+    toast(err.message, 'error', 5000);
+    const badge = document.getElementById('model-badge');
+    if (badge) { badge.textContent = '모델 연결 실패'; badge.className = 'error'; }
+  } finally {
+    state.generating = false;
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> 학습목표 생성`;
+    showProgressBar(false);
+  }
+}
+
+/* ============================================================
+   INSTRUCTOR — AI PROMPT BUILDER
+   ============================================================ */
+function buildInstructorPrompt(objectives) {
+  const objList = objectives.map((obj, i) => `${i + 1}. ${obj.title}: ${obj.description}`).join('\n');
+  return `당신은 기업 교육 전문가입니다. 아래 학습목표를 분석하여 적합한 강사를 추천해 주세요.
+
+[학습목표]
+${objList}
+
+위 학습목표를 효과적으로 달성할 수 있는 강사를 최대 10명 추천해 주세요.
+반드시 아래 JSON 배열 형식으로만 응답하세요:
+[
+  {
+    "name": "강사명 (예: 홍길동)",
+    "expertise": "전문역량 (예: AWS 솔루션 아키텍트, 클라우드 인프라 설계)",
+    "match_reason": "이 강사를 추천하는 이유 (학습목표와의 연관성 중심으로 서술)"
+  }
+]
+- 강사명은 실제처럼 자연스러운 한국 이름으로 생성
+- 전문역량은 구체적인 기술/분야 나열
+- 추천 이유는 40~80자 한국어 평서문
+- JSON 외 다른 텍스트 절대 포함하지 말 것`;
+}
+
+/* ============================================================
+   INSTRUCTOR — PARSE AI RESPONSE
+   ============================================================ */
+function parseInstructors(content) {
+  let jsonStr = content;
+
+  const fenceMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) jsonStr = fenceMatch[1];
+
+  const arrMatch = jsonStr.match(/\[[\s\S]*\]/);
+  if (arrMatch) jsonStr = arrMatch[0];
+
+  try {
+    const parsed = JSON.parse(jsonStr);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.slice(0, 10);
+    }
+  } catch (e) { /* parse failed */ }
+
+  throw new Error('강사 추천 AI 응답을 파싱할 수 없습니다. 다시 시도해 주세요.');
+}
+
+/* ============================================================
+   INSTRUCTOR — SUPABASE SAVE
+   ============================================================ */
+async function saveInstructorsToDB(instructors) {
+  try {
+    await supabaseClient.from('instructor_recommendations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    const rows = instructors.map((inst, i) => ({
+      name:         inst.name.slice(0, 50),
+      expertise:    inst.expertise.slice(0, 200),
+      match_reason: inst.match_reason.slice(0, 200),
+      sort_order:   i + 1,
+    }));
+    const { error } = await supabaseClient.from('instructor_recommendations').insert(rows);
+    if (error) throw error;
+    toast(`강사 ${rows.length}명이 DB에 저장되었습니다.`, 'success');
+  } catch (err) {
+    console.warn('강사 DB 저장 실패:', err);
+    toast('강사 DB 저장에 실패했습니다. 로컬에만 표시됩니다.', 'warning');
+  }
+}
+
+/* ============================================================
+   INSTRUCTOR — RENDER
+   ============================================================ */
+function renderInstructors(instructors) {
+  const content = document.getElementById('instructor-content');
+  if (!content) return;
+
+  if (!instructors || instructors.length === 0) {
+    content.innerHTML = `
+      <div id="instructor-placeholder">
+        <div class="placeholder-icon" aria-hidden="true">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--blue-400)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+            <path d="M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+        </div>
+        <p>학습목표 생성 후<br />'강사 추천' 버튼을 눌러주세요.</p>
+        <small>학습목표를 분석하여 AI가 적합한 강사를 최대 10명 추천합니다.</small>
+      </div>`;
+    const cb = document.getElementById('instructor-count-badge');
+    if (cb) cb.style.display = 'none';
+    return;
+  }
+
+  // 카운트 뱃지
+  const countBadge = document.getElementById('instructor-count-badge');
+  if (countBadge) {
+    countBadge.textContent = `${instructors.length}명`;
+    countBadge.style.display = 'inline-flex';
+  }
+
+  const cards = instructors.map((inst, i) => `
+    <div class="instructor-card" style="animation-delay:${(i * 0.06).toFixed(2)}s;">
+      <div class="instructor-number" aria-hidden="true">${i + 1}</div>
+      <div class="instructor-body">
+        <div class="instructor-name">${escapeHtml(inst.name)}</div>
+        <div class="instructor-expertise">
+          <span class="instructor-expertise-label">전문역량: </span>${escapeHtml(inst.expertise)}
+        </div>
+        <div class="instructor-reason">
+          <span class="instructor-reason-label">추천 이유: </span>${escapeHtml(inst.match_reason)}
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  content.innerHTML = cards;
+  content.scrollTop = 0;
+}
+
+/* ============================================================
+   INSTRUCTOR — GENERATE HANDLER
+   ============================================================ */
+async function generateInstructors() {
+  // 1. 현재 학습목표 가져오기
+  const objectives = window._lastObjectives;
+  if (!objectives || objectives.length === 0) {
+    toast('먼저 학습목표를 생성해 주세요.', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('instructor-btn');
+  const modelBadge = document.getElementById('instructor-model-badge');
+  const content = document.getElementById('instructor-content');
+
+  // 2. 버튼 로딩 상태
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> 추천 중…`;
+
+  if (modelBadge) {
+    modelBadge.textContent = '요청 중…';
+    modelBadge.className = 'trying';
+  }
+
+  // 로딩 표시
+  content.innerHTML = `
+    <div class="loading-card" style="min-height:480px;">
+      <div class="spinner" role="status" aria-label="로딩 중"></div>
+      <p>AI가 강사를 추천하고 있습니다…</p>
+    </div>`;
+
+  try {
+    // 3. AI 호출
+    const prompt = buildInstructorPrompt(objectives);
+    const raw = await callAI(prompt);
+
+    // 4. 파싱
+    const instructors = parseInstructors(raw);
+
+    // 5. 모델 뱃지 업데이트
+    if (modelBadge) {
+      const modelName = shortModelName(state.currentModel || FREE_MODELS[0]);
+      modelBadge.textContent = `사용 모델: ${modelName}`;
+      modelBadge.className = '';
+    }
+
+    // 6. DB 저장
+    await saveInstructorsToDB(instructors);
+
+    // 7. 렌더
+    renderInstructors(instructors);
+    toast(`강사 ${instructors.length}명이 추천되었습니다.`, 'success');
+
+  } catch (err) {
+    content.innerHTML = `
+      <div id="instructor-placeholder">
+        <div class="placeholder-icon" aria-hidden="true" style="background:#FEF2F2;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <p style="color:#B91C1C;">${escapeHtml(err.message)}</p>
+        <small>학습목표를 확인하거나 잠시 후 다시 시도해 주세요.</small>
+      </div>`;
+    if (modelBadge) { modelBadge.textContent = '연결 실패'; modelBadge.className = ''; }
+    toast(err.message, 'error', 5000);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> 강사 추천`;
+  }
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+   ============================================================ */
+function initKeyboardShortcuts() {
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      // Close modal if open
+      const modalOverlay = document.getElementById('modal-overlay');
+      if (modalOverlay.classList.contains('open')) {
+        closeModal();
+        return;
+      }
+      // Close confirm dialog if open
+      const overlay = document.getElementById('confirm-overlay');
+      if (overlay.classList.contains('open')) overlay.classList.remove('open');
+    }
+  });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init() {
+  initTabs();
+  initModal();
+  initKeyboardShortcuts();
+  renderAllLists();
+  updateChips();
+  updateTabDots();
+
+  document.getElementById('generate-btn').addEventListener('click', handleGenerate);
+  document.getElementById('instructor-btn').addEventListener('click', generateInstructors);
+
+  const name = shortModelName(FREE_MODELS[0]);
+  const badge = document.getElementById('model-badge');
+  if (badge) badge.textContent = `기본 모델: ${name}`;
+
+  // window._lastObjectives 초기화
+  window._lastObjectives = null;
+
+  // DB에서 학습목표 & 강사추천 데이터 로드
+  loadFromDB();
+}
+
+async function loadFromDB() {
+  try {
+    // 학습목표 로드
+    const { data: objectives, error: objErr } = await supabaseClient
+      .from('learning_objectives')
+      .select('title, description, sort_order')
+      .order('sort_order', { ascending: true });
+
+    if (!objErr && objectives && objectives.length > 0) {
+      const parsed = objectives.map(r => ({ title: r.title, description: r.description }));
+      window._lastObjectives = parsed;
+      renderObjectives(parsed);
+    }
+  } catch (e) {
+    console.warn('학습목표 DB 로드 실패:', e);
+  }
+
+  try {
+    // 강사추천 로드
+    const { data: instructors, error: instErr } = await supabaseClient
+      .from('instructor_recommendations')
+      .select('name, expertise, match_reason, sort_order')
+      .order('sort_order', { ascending: true });
+
+    if (!instErr && instructors && instructors.length > 0) {
+      renderInstructors(instructors);
+    }
+  } catch (e) {
+    console.warn('강사추천 DB 로드 실패:', e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
