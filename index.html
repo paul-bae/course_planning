@@ -2067,6 +2067,119 @@ function saveEduCourses(courses) {
 }
 
 /* ============================================================
+   SUPABASE DB 동기화 헬퍼
+   - DB 실패 시에도 localStorage 저장은 유지 (try-catch)
+   - INSERT 후 반환된 UUID를 레코드 id로 교체하여
+     이후 UPDATE/DELETE 가능하게 함
+   ============================================================ */
+async function dbInsert(table, row) {
+  try {
+    const { data, error } = await supabaseClient
+      .from(table)
+      .insert(row)
+      .select('id')
+      .single();
+    if (error) { console.warn(`[DB INSERT ${table}]`, error.message); return null; }
+    return data ? data.id : null;
+  } catch (e) { console.warn(`[DB INSERT ${table}]`, e); return null; }
+}
+
+async function dbUpdate(table, id, row) {
+  try {
+    const { error } = await supabaseClient
+      .from(table)
+      .update(row)
+      .eq('id', id);
+    if (error) console.warn(`[DB UPDATE ${table}]`, error.message);
+  } catch (e) { console.warn(`[DB UPDATE ${table}]`, e); }
+}
+
+async function dbDelete(table, id) {
+  try {
+    const { error } = await supabaseClient
+      .from(table)
+      .delete()
+      .eq('id', id);
+    if (error) console.warn(`[DB DELETE ${table}]`, error.message);
+  } catch (e) { console.warn(`[DB DELETE ${table}]`, e); }
+}
+
+/* 과정개요: 단일 레코드 Upsert
+   기존 레코드가 있으면 UPDATE, 없으면 INSERT
+   INSERT 시 반환된 UUID를 data.id에 덮어쓰고 localStorage 재저장 */
+async function syncOverviewToDB(data) {
+  try {
+    const { data: existing, error: selErr } = await supabaseClient
+      .from('course_overview')
+      .select('id')
+      .limit(1);
+    if (selErr) { console.warn('[DB OVERVIEW SELECT]', selErr.message); return; }
+
+    const payload = {
+      course_name:     data.course_name,
+      education_goal:  data.education_goal,
+      target_audience: data.target_audience,
+      details:         data.details,
+    };
+
+    if (existing && existing.length > 0) {
+      await dbUpdate('course_overview', existing[0].id, payload);
+      // 로컬 id를 DB UUID로 통일
+      if (data.id !== existing[0].id) {
+        data.id = existing[0].id;
+        localStorage.setItem(OVERVIEW_KEY, JSON.stringify(data));
+      }
+    } else {
+      const uuid = await dbInsert('course_overview', payload);
+      if (uuid) {
+        data.id = uuid;
+        localStorage.setItem(OVERVIEW_KEY, JSON.stringify(data));
+      }
+    }
+  } catch (e) { console.warn('[DB OVERVIEW SYNC]', e); }
+}
+
+/* 로컬 필드 → DB 컬럼 매핑 */
+function toDbRow(tab, record) {
+  switch (tab) {
+    case 'job': return {
+      job_name:        record.name,
+      job_definition:  record.definition,
+      main_tasks:      record.mainWork,
+      task_details:    record.detail,
+      expertise:       record.knowledge,
+      skills_tools:    record.skill,
+      work_experience: record.experience,
+    };
+    case 'survey': return {
+      survey_name:     record.name,
+      response_result: record.result,
+    };
+    case 'proposal': return {
+      proposal_course_name: record.name,
+      necessity_background: record.reason,
+      expected_effects:     record.effect,
+      main_curriculum:      record.curriculum,
+    };
+    case 'vision': return {
+      org_name:            record.name,
+      org_goal:            record.goal,
+      core_jobs:           record.coreJob,
+      competency_skills:   record.skill,
+      education_direction: record.direction,
+    };
+    default: return {};
+  }
+}
+
+const TAB_TO_TABLE = {
+  job:      'job_roles',
+  survey:   'survey_results',
+  proposal: 'education_proposals',
+  vision:   'org_visions',
+};
+
+/* ============================================================
    UTILS — Toast
    ============================================================ */
 const TOAST_ICONS = {
@@ -2193,10 +2306,10 @@ function initModal() {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
   });
 
-  document.getElementById('modal-save-btn').addEventListener('click', () => {
+  document.getElementById('modal-save-btn').addEventListener('click', async () => {
     const tab = state.modal.tab;
     if (!tab) return;
-    saveRecord(tab);
+    await saveRecord(tab);
   });
 }
 
@@ -2366,7 +2479,7 @@ function validateRequired(tab, data) {
 /* ============================================================
    CRUD — Save / Edit / Delete
    ============================================================ */
-function saveRecord(tab) {
+async function saveRecord(tab) {
   // Education 1:N: eduJob
   if (tab === 'eduJob') {
     const nameEl = document.getElementById('edujob-name');
@@ -2381,13 +2494,23 @@ function saveRecord(tab) {
       const idx = jobs.findIndex(j => j.id === editingId);
       if (idx !== -1) {
         jobs[idx] = { ...jobs[idx], job_name: jobName, updatedAt: new Date().toISOString() };
+        saveEduJobs(jobs);
+        // DB 동기화 (실패해도 localStorage 유지)
+        await dbUpdate('education_jobs', editingId, { job_name: jobName });
         toast('전문분야가 수정되었습니다.', 'success');
       }
     } else {
-      jobs.push({ id: generateId(), job_name: jobName, created_at: new Date().toISOString() });
+      const newJob = { id: generateId(), job_name: jobName, created_at: new Date().toISOString() };
+      jobs.push(newJob);
+      saveEduJobs(jobs);
+      // DB INSERT → UUID 교체
+      const uuid = await dbInsert('education_jobs', { job_name: jobName });
+      if (uuid) {
+        newJob.id = uuid;
+        saveEduJobs(jobs);
+      }
       toast('전문분야가 저장되었습니다.', 'success');
     }
-    saveEduJobs(jobs);
     closeModal();
     renderEduList();
     updateChips();
@@ -2417,23 +2540,44 @@ function saveRecord(tab) {
           details:          g('edu-detail'),
           updatedAt: new Date().toISOString(),
         };
+        saveEduCourses(courses);
+        // DB 동기화
+        await dbUpdate('education_courses', editingId, {
+          course_name:     courseName,
+          education_goal:  g('edu-goal'),
+          target_audience: g('edu-target'),
+          details:         g('edu-detail'),
+        });
         toast('과정이 수정되었습니다.', 'success');
       }
     } else {
       const jobId = state.modal.extraData && state.modal.extraData.jobId;
       if (!jobId) { toast('직무 정보를 찾을 수 없습니다.', 'error'); return; }
-      courses.push({
-        id: generateId(),
+      const newCourse = {
+        id:              generateId(),
         job_id:          jobId,
         course_name:     courseName,
         education_goal:  g('edu-goal'),
         target_audience: g('edu-target'),
         details:         g('edu-detail'),
         created_at:      new Date().toISOString(),
+      };
+      courses.push(newCourse);
+      saveEduCourses(courses);
+      // DB INSERT → UUID 교체
+      const uuid = await dbInsert('education_courses', {
+        job_id:          jobId,
+        course_name:     courseName,
+        education_goal:  g('edu-goal'),
+        target_audience: g('edu-target'),
+        details:         g('edu-detail'),
       });
+      if (uuid) {
+        newCourse.id = uuid;
+        saveEduCourses(courses);
+      }
       toast('과정이 저장되었습니다.', 'success');
     }
-    saveEduCourses(courses);
     closeModal();
     renderEduList();
     updateChips();
@@ -2441,25 +2585,38 @@ function saveRecord(tab) {
     return;
   }
 
-  // Standard tabs
+  // Standard tabs (job, survey, proposal, vision)
   const data = getFormData(tab);
   if (!validateRequired(tab, data)) return;
 
   const records = loadRecords(tab);
   const editingId = state.modal.editingId;
+  const table = TAB_TO_TABLE[tab];
 
   if (editingId) {
     const idx = records.findIndex(r => r.id === editingId);
     if (idx !== -1) {
       records[idx] = { ...records[idx], ...data, updatedAt: new Date().toISOString() };
+      saveRecords(tab, records);
+      // DB 동기화
+      if (table) await dbUpdate(table, editingId, toDbRow(tab, records[idx]));
       toast('수정되었습니다.', 'success');
     }
   } else {
-    records.push({ id: generateId(), ...data, createdAt: new Date().toISOString() });
+    const newRecord = { id: generateId(), ...data, createdAt: new Date().toISOString() };
+    records.push(newRecord);
+    saveRecords(tab, records);
+    // DB INSERT → UUID 교체
+    if (table) {
+      const uuid = await dbInsert(table, toDbRow(tab, newRecord));
+      if (uuid) {
+        newRecord.id = uuid;
+        saveRecords(tab, records);
+      }
+    }
     toast('저장되었습니다.', 'success');
   }
 
-  saveRecords(tab, records);
   closeModal();
   renderList(tab);
   updateChips();
@@ -2479,8 +2636,12 @@ async function deleteEduJob(jobId) {
   const confirmed = await confirmDialog('전문분야 삭제', msg);
   if (!confirmed) return;
 
+  // localStorage 삭제 (하위 과정 포함)
   saveEduJobs(loadEduJobs().filter(j => j.id !== jobId));
   saveEduCourses(loadEduCourses().filter(c => c.job_id !== jobId));
+
+  // DB 삭제 (education_jobs CASCADE → education_courses 자동 삭제 기대)
+  await dbDelete('education_jobs', jobId);
 
   toast('전문분야와 하위 과정이 삭제되었습니다.', 'info');
   renderEduList();
@@ -2494,6 +2655,9 @@ async function deleteEduCourse(courseId) {
 
   saveEduCourses(loadEduCourses().filter(c => c.id !== courseId));
 
+  // DB 삭제
+  await dbDelete('education_courses', courseId);
+
   toast('과정이 삭제되었습니다.', 'info');
   renderEduList();
   updateChips();
@@ -2506,6 +2670,10 @@ async function deleteRecord(tab, id) {
 
   let records = loadRecords(tab).filter(r => r.id !== id);
   saveRecords(tab, records);
+
+  // DB 삭제
+  const table = TAB_TO_TABLE[tab];
+  if (table) await dbDelete(table, id);
 
   toast('삭제되었습니다.', 'info');
   renderList(tab);
@@ -2656,7 +2824,7 @@ function renderOverview() {
     // 글자 수 카운터 초기화
     initOverviewCounters(container);
 
-    document.getElementById('overview-save-btn').addEventListener('click', () => {
+    document.getElementById('overview-save-btn').addEventListener('click', async () => {
       const name   = (document.getElementById('ov-name').value   || '').trim();
       const goal   = (document.getElementById('ov-goal').value   || '').trim();
       const target = (document.getElementById('ov-target').value || '').trim();
@@ -2671,6 +2839,8 @@ function renderOverview() {
         created_at:      new Date().toISOString(),
       };
       saveOverview(record);
+      // DB 동기화 (INSERT → UUID 교체 포함)
+      await syncOverviewToDB(record);
       toast('과정개요가 저장되었습니다.', 'success');
       renderOverview();
       updateChips();
@@ -2710,7 +2880,18 @@ function renderOverview() {
   document.getElementById('overview-delete-btn').addEventListener('click', async () => {
     const confirmed = await confirmDialog('과정개요 삭제', '과정개요를 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.');
     if (!confirmed) return;
+    // DB 삭제 (id 기반 — UUID가 있으면 그걸 사용)
+    const existing = loadOverview();
     deleteOverview();
+    if (existing && existing.id) {
+      try {
+        const { error } = await supabaseClient
+          .from('course_overview')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000');
+        if (error) console.warn('[DB DELETE course_overview]', error.message);
+      } catch (e) { console.warn('[DB DELETE course_overview]', e); }
+    }
     toast('과정개요가 삭제되었습니다.', 'info');
     renderOverview();
     updateChips();
@@ -2780,7 +2961,7 @@ function showOverviewEditForm(data) {
 
   document.getElementById('overview-cancel-btn').addEventListener('click', () => renderOverview());
 
-  document.getElementById('overview-save-btn').addEventListener('click', () => {
+  document.getElementById('overview-save-btn').addEventListener('click', async () => {
     const name   = (document.getElementById('ov-name').value   || '').trim();
     const goal   = (document.getElementById('ov-goal').value   || '').trim();
     const target = (document.getElementById('ov-target').value || '').trim();
@@ -2795,6 +2976,8 @@ function showOverviewEditForm(data) {
       updated_at:      new Date().toISOString(),
     };
     saveOverview(record);
+    // DB 동기화 (기존 레코드 UPDATE 또는 INSERT)
+    await syncOverviewToDB(record);
     toast('과정개요가 수정되었습니다.', 'success');
     renderOverview();
     updateChips();
