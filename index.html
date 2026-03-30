@@ -818,6 +818,79 @@
       line-height: 1.7;
     }
 
+    /* 학습목표 카드 수정/삭제 버튼 */
+    .obj-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .objective-card:hover .obj-actions { opacity: 1; }
+    .obj-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+    .obj-btn-edit {
+      color: var(--blue-600);
+      border-color: var(--blue-200);
+      background: var(--blue-50);
+    }
+    .obj-btn-edit:hover { background: var(--blue-100); }
+    .obj-btn-delete {
+      color: var(--red-600);
+      border-color: #FECACA;
+      background: #FEF2F2;
+    }
+    .obj-btn-delete:hover { background: #FEE2E2; }
+
+    /* 인라인 편집 폼 */
+    .obj-edit-form { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+    .obj-edit-input {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1.5px solid var(--blue-300);
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: var(--font);
+      color: var(--gray-900);
+      background: #fff;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    .obj-edit-input:focus { outline: none; border-color: var(--blue-500); }
+    .obj-edit-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .obj-btn-save {
+      padding: 5px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: var(--blue-600);
+      color: #fff;
+      transition: background .15s;
+    }
+    .obj-btn-save:hover { background: var(--blue-700); }
+    .obj-btn-cancel {
+      padding: 5px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--gray-200);
+      background: #fff;
+      color: var(--gray-600);
+      transition: background .15s;
+    }
+    .obj-btn-cancel:hover { background: var(--gray-100); }
+
     /* Empty / loading states */
     #objectives-placeholder {
       display: flex;
@@ -3543,8 +3616,13 @@ async function saveObjectivesToDB(objectives) {
       description: obj.description.slice(0, 200),
       sort_order:  i + 1,
     }));
-    const { error } = await supabaseClient.from('learning_objectives').insert(rows);
+    const { data: inserted, error } = await supabaseClient.from('learning_objectives').insert(rows).select('id, sort_order');
     if (error) throw error;
+    // 반환된 UUID를 objectives에 주입
+    if (inserted) inserted.forEach(r => {
+      const obj = objectives[r.sort_order - 1];
+      if (obj) obj.id = r.id;
+    });
     toast(`학습목표 ${rows.length}개가 DB에 저장되었습니다.`, 'success');
   } catch (err) {
     console.error('DB 저장 실패:', err);
@@ -3591,12 +3669,16 @@ function renderObjectives(objectives) {
   }
 
   const cards = objectives.map((obj, i) => `
-    <div class="objective-card"
+    <div class="objective-card" data-idx="${i}" data-id="${obj.id || ''}"
          style="animation: cardIn .3s ease ${(i * 0.06).toFixed(2)}s both;">
       <div class="obj-number" aria-hidden="true">${i + 1}</div>
       <div class="obj-body">
         <div class="obj-title">${escapeHtml(obj.title)}</div>
         <div class="obj-desc">${escapeHtml(obj.description)}</div>
+      </div>
+      <div class="obj-actions">
+        <button class="obj-btn obj-btn-edit" onclick="startEditObjective(${i})">수정</button>
+        <button class="obj-btn obj-btn-delete" onclick="deleteObjective(${i})">삭제</button>
       </div>
     </div>
   `).join('');
@@ -3604,6 +3686,103 @@ function renderObjectives(objectives) {
   container.innerHTML = cards;
   // 스크롤을 상단으로 리셋
   container.scrollTop = 0;
+}
+
+/* ── 학습목표 인라인 수정 ── */
+function startEditObjective(idx) {
+  const objectives = window._lastObjectives;
+  if (!objectives || !objectives[idx]) return;
+  const obj = objectives[idx];
+
+  const card = document.querySelector(`.objective-card[data-idx="${idx}"]`);
+  if (!card) return;
+
+  card.querySelector('.obj-body').style.display = 'none';
+  card.querySelector('.obj-actions').style.display = 'none';
+
+  const form = document.createElement('div');
+  form.className = 'obj-edit-form';
+  form.innerHTML = `
+    <input class="obj-edit-input" id="obj-edit-title-${idx}" maxlength="100"
+           value="${escapeHtml(obj.title)}" placeholder="학습목표 제목 (100자 이내)" />
+    <textarea class="obj-edit-input" id="obj-edit-desc-${idx}" rows="3" maxlength="200"
+              placeholder="설명 (200자 이내)">${escapeHtml(obj.description)}</textarea>
+    <div class="obj-edit-actions">
+      <button class="obj-btn-cancel" onclick="cancelEditObjective(${idx})">취소</button>
+      <button class="obj-btn-save" onclick="saveEditObjective(${idx})">저장</button>
+    </div>`;
+  card.appendChild(form);
+}
+
+function cancelEditObjective(idx) {
+  const card = document.querySelector(`.objective-card[data-idx="${idx}"]`);
+  if (!card) return;
+  card.querySelector('.obj-body').style.display = '';
+  card.querySelector('.obj-actions').style.display = '';
+  const form = card.querySelector('.obj-edit-form');
+  if (form) form.remove();
+}
+
+async function saveEditObjective(idx) {
+  const objectives = window._lastObjectives;
+  if (!objectives || !objectives[idx]) return;
+
+  const titleEl = document.getElementById(`obj-edit-title-${idx}`);
+  const descEl  = document.getElementById(`obj-edit-desc-${idx}`);
+  const newTitle = (titleEl ? titleEl.value : '').trim();
+  const newDesc  = (descEl  ? descEl.value  : '').trim();
+
+  if (!newTitle) { toast('학습목표 제목을 입력해주세요.', 'error'); return; }
+
+  const obj = objectives[idx];
+  obj.title       = newTitle;
+  obj.description = newDesc;
+
+  // DB UPDATE
+  if (obj.id) {
+    try {
+      const { error } = await supabaseClient
+        .from('learning_objectives')
+        .update({ title: newTitle.slice(0, 100), description: newDesc.slice(0, 200) })
+        .eq('id', obj.id);
+      if (error) throw error;
+      toast('학습목표가 수정되었습니다.', 'success');
+    } catch (e) {
+      console.warn('학습목표 수정 DB 실패:', e);
+      toast('수정 내용을 DB에 저장하지 못했습니다.', 'warning');
+    }
+  }
+
+  renderObjectives(objectives);
+}
+
+async function deleteObjective(idx) {
+  const objectives = window._lastObjectives;
+  if (!objectives || !objectives[idx]) return;
+
+  const confirmed = await confirmDialog('학습목표 삭제', `${idx + 1}번 학습목표를 삭제하시겠습니까?`);
+  if (!confirmed) return;
+
+  const obj = objectives[idx];
+
+  // DB DELETE
+  if (obj.id) {
+    try {
+      const { error } = await supabaseClient
+        .from('learning_objectives')
+        .delete()
+        .eq('id', obj.id);
+      if (error) throw error;
+    } catch (e) {
+      console.warn('학습목표 삭제 DB 실패:', e);
+      toast('DB 삭제에 실패했습니다.', 'warning');
+    }
+  }
+
+  objectives.splice(idx, 1);
+  window._lastObjectives = objectives;
+  renderObjectives(objectives);
+  toast('학습목표가 삭제되었습니다.', 'info');
 }
 
 function showLoading() {
@@ -4065,7 +4244,7 @@ async function loadFromDB() {
       .select('title, description, sort_order')
       .order('sort_order', { ascending: true });
     if (!objErr && objectives && objectives.length > 0) {
-      const parsed = objectives.map(r => ({ title: r.title, description: r.description }));
+      const parsed = objectives.map(r => ({ id: r.id, title: r.title, description: r.description }));
       window._lastObjectives = parsed;
       renderObjectives(parsed);
     }
