@@ -854,17 +854,18 @@
     .obj-edit-form { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
     .obj-edit-input {
       width: 100%;
-      padding: 7px 10px;
-      border: 1.5px solid var(--blue-300);
-      border-radius: 6px;
+      padding: 8px 10px;
+      border: 1.5px solid #94a3b8;
+      border-radius: 7px;
       font-size: 13px;
       font-family: var(--font);
       color: var(--gray-900);
       background: #fff;
       box-sizing: border-box;
       resize: vertical;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
     }
-    .obj-edit-input:focus { outline: none; border-color: var(--blue-500); }
+    .obj-edit-input:focus { outline: none; border-color: var(--blue-500); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
     .obj-edit-actions { display: flex; gap: 8px; justify-content: flex-end; }
     .obj-btn-save {
       padding: 5px 14px;
@@ -1488,6 +1489,69 @@
       font-weight: 500;
     }
 
+    /* Instructor 수정/삭제 버튼 */
+    .inst-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .instructor-card:hover .inst-actions { opacity: 1; }
+    .inst-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background .15s;
+    }
+    .inst-btn-edit  { background: var(--blue-50); color: var(--blue-600); border-color: var(--blue-200); }
+    .inst-btn-edit:hover  { background: var(--blue-100); }
+    .inst-btn-delete { background: #FFF5F5; color: #E53E3E; border-color: #FED7D7; }
+    .inst-btn-delete:hover { background: #FEE2E2; }
+
+    /* Instructor 인라인 편집 폼 */
+    .inst-edit-form { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+    .inst-edit-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid #94a3b8;
+      border-radius: 7px;
+      font-size: 13px;
+      font-family: var(--font);
+      color: var(--gray-900);
+      background: #fff;
+      box-sizing: border-box;
+      resize: vertical;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .inst-edit-input:focus { outline: none; border-color: var(--blue-500); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+    .inst-edit-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .inst-btn-cancel {
+      padding: 5px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--gray-100);
+      border: 1px solid var(--color-border);
+      color: var(--gray-600);
+    }
+    .inst-btn-cancel:hover { background: var(--gray-200); }
+    .inst-btn-save {
+      padding: 5px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--blue-600);
+      border: 1px solid var(--blue-600);
+      color: #fff;
+    }
+    .inst-btn-save:hover { background: var(--blue-700); }
+
     /* Instructor placeholder */
     #instructor-placeholder {
       display: flex;
@@ -1807,6 +1871,14 @@
               </div>
               <p style="margin:4px 0 0;font-size:12px;color:var(--gray-400);line-height:1.5;">학습목표는 과정개요, 전문분야, 전문분야별 과정, 설문결과, 교육제안, 연관조직 데이터 기반으로 AI가 분석한 데이터입니다.</p>
             </div>
+            <button id="obj-add-btn" onclick="openObjectiveModal()" style="
+              display:inline-flex;align-items:center;gap:6px;
+              padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;
+              background:#fff;border:1.5px solid var(--blue-300);color:var(--blue-600);
+              cursor:pointer;white-space:nowrap;transition:background .15s;flex-shrink:0;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
           </div>
 
           <!-- Objectives output -->
@@ -1838,15 +1910,25 @@
               </div>
               <p style="margin:4px 0 0;font-size:12px;color:var(--gray-400);line-height:1.5;">강사 추천은 과정 학습 목표와 강사 전문 역량을 매칭하여 AI가 추천한 데이터입니다.</p>
             </div>
-            <button id="instructor-btn">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                <path d="M16 3.13a4 4 0 010 7.75"/>
-              </svg>
-              강사 추천
-            </button>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <button id="inst-add-btn" onclick="openInstructorModal()" style="
+                display:inline-flex;align-items:center;gap:6px;
+                padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;
+                background:#fff;border:1.5px solid var(--blue-300);color:var(--blue-600);
+                cursor:pointer;white-space:nowrap;transition:background .15s;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                추가
+              </button>
+              <button id="instructor-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 010 7.75"/>
+                </svg>
+                강사 추천
+              </button>
+            </div>
           </div>
           <div id="instructor-content">
             <div id="instructor-placeholder">
@@ -2382,6 +2464,8 @@ function initModal() {
   document.getElementById('modal-save-btn').addEventListener('click', async () => {
     const tab = state.modal.tab;
     if (!tab) return;
+    if (tab === 'objectiveAdd')  { await saveObjectiveModal();  return; }
+    if (tab === 'instructorAdd') { await saveInstructorModal(); return; }
     await saveRecord(tab);
   });
 }
@@ -3703,8 +3787,10 @@ function startEditObjective(idx) {
   const form = document.createElement('div');
   form.className = 'obj-edit-form';
   form.innerHTML = `
+    <label style="font-size:11px;font-weight:700;color:var(--blue-700);display:block;margin-bottom:3px;">학습목표 제목</label>
     <input class="obj-edit-input" id="obj-edit-title-${idx}" maxlength="100"
            value="${escapeHtml(obj.title)}" placeholder="학습목표 제목 (100자 이내)" />
+    <label style="font-size:11px;font-weight:700;color:var(--blue-700);display:block;margin:8px 0 3px;">설명</label>
     <textarea class="obj-edit-input" id="obj-edit-desc-${idx}" rows="3" maxlength="200"
               placeholder="설명 (200자 이내)">${escapeHtml(obj.description)}</textarea>
     <div class="obj-edit-actions">
@@ -3783,6 +3869,216 @@ async function deleteObjective(idx) {
   window._lastObjectives = objectives;
   renderObjectives(objectives);
   toast('학습목표가 삭제되었습니다.', 'info');
+}
+
+/* ── 학습목표 신규 추가 모달 ── */
+function openObjectiveModal() {
+  // Inject form into existing modal
+  document.getElementById('modal-title').textContent = '학습목표 추가';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <label style="font-size:12px;font-weight:700;color:var(--blue-700);">학습목표 제목</label>
+      <input id="obj-modal-title" class="form-input" maxlength="100" placeholder="학습목표 제목 (100자 이내)"
+             style="width:100%;padding:8px 10px;border:1.5px solid var(--color-border);border-radius:7px;font-size:13px;outline:none;" />
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-top:14px;">
+      <label style="font-size:12px;font-weight:700;color:var(--blue-700);">설명</label>
+      <textarea id="obj-modal-desc" class="form-input" maxlength="200" rows="4" placeholder="설명 (200자 이내)"
+                style="width:100%;padding:8px 10px;border:1.5px solid var(--color-border);border-radius:7px;font-size:13px;resize:vertical;outline:none;"></textarea>
+    </div>`;
+  document.getElementById('modal-save-btn').innerHTML = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 저장`;
+  state.modal.tab = 'objectiveAdd';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('obj-modal-title').focus(), 60);
+}
+
+async function saveObjectiveModal() {
+  const titleEl = document.getElementById('obj-modal-title');
+  const descEl  = document.getElementById('obj-modal-desc');
+  const title = (titleEl ? titleEl.value : '').trim();
+  const desc  = (descEl  ? descEl.value  : '').trim();
+  if (!title) { toast('학습목표 제목을 입력해주세요.', 'error'); return; }
+
+  const objectives = window._lastObjectives || [];
+  const newObj = { title: title.slice(0, 100), description: desc.slice(0, 200) };
+
+  try {
+    const maxOrder = objectives.reduce((m, o) => Math.max(m, o.sort_order || 0), 0);
+    const row = { title: newObj.title, description: newObj.description, sort_order: maxOrder + 1 };
+    const { data, error } = await supabaseClient.from('learning_objectives').insert([row]).select('id, sort_order');
+    if (error) throw error;
+    if (data && data[0]) newObj.id = data[0].id;
+    toast('학습목표가 추가되었습니다.', 'success');
+  } catch (e) {
+    console.warn('학습목표 추가 DB 실패:', e);
+    toast('DB 저장에 실패했습니다.', 'warning');
+  }
+
+  objectives.push(newObj);
+  window._lastObjectives = objectives;
+  renderObjectives(objectives);
+  closeModal();
+}
+
+/* ============================================================
+   INSTRUCTOR — 인라인 수정 / 삭제 / 신규 추가
+   ============================================================ */
+function startEditInstructor(idx) {
+  const instructors = window._lastInstructors;
+  if (!instructors || !instructors[idx]) return;
+  const inst = instructors[idx];
+
+  const card = document.querySelector(`.instructor-card[data-idx="${idx}"]`);
+  if (!card) return;
+
+  card.querySelector('.instructor-body').style.display = 'none';
+  card.querySelector('.inst-actions').style.display = 'none';
+
+  const form = document.createElement('div');
+  form.className = 'inst-edit-form';
+  form.innerHTML = `
+    <label style="font-size:11px;font-weight:700;color:var(--blue-700);display:block;margin-bottom:3px;">강사명</label>
+    <input class="inst-edit-input" id="inst-edit-name-${idx}" maxlength="50"
+           value="${escapeHtml(inst.name)}" placeholder="강사명 (50자 이내)" />
+    <label style="font-size:11px;font-weight:700;color:var(--blue-700);display:block;margin:8px 0 3px;">전문역량</label>
+    <input class="inst-edit-input" id="inst-edit-exp-${idx}" maxlength="200"
+           value="${escapeHtml(inst.expertise)}" placeholder="전문역량 (200자 이내)" />
+    <label style="font-size:11px;font-weight:700;color:var(--blue-700);display:block;margin:8px 0 3px;">추천사유</label>
+    <textarea class="inst-edit-input" id="inst-edit-reason-${idx}" rows="3" maxlength="200"
+              placeholder="추천사유 (200자 이내)">${escapeHtml(inst.match_reason)}</textarea>
+    <div class="inst-edit-actions">
+      <button class="inst-btn-cancel" onclick="cancelEditInstructor(${idx})">취소</button>
+      <button class="inst-btn-save" onclick="saveEditInstructor(${idx})">저장</button>
+    </div>`;
+  card.appendChild(form);
+}
+
+function cancelEditInstructor(idx) {
+  const card = document.querySelector(`.instructor-card[data-idx="${idx}"]`);
+  if (!card) return;
+  card.querySelector('.instructor-body').style.display = '';
+  card.querySelector('.inst-actions').style.display = '';
+  const form = card.querySelector('.inst-edit-form');
+  if (form) form.remove();
+}
+
+async function saveEditInstructor(idx) {
+  const instructors = window._lastInstructors;
+  if (!instructors || !instructors[idx]) return;
+
+  const nameEl   = document.getElementById(`inst-edit-name-${idx}`);
+  const expEl    = document.getElementById(`inst-edit-exp-${idx}`);
+  const reasonEl = document.getElementById(`inst-edit-reason-${idx}`);
+  const newName   = (nameEl   ? nameEl.value   : '').trim();
+  const newExp    = (expEl    ? expEl.value    : '').trim();
+  const newReason = (reasonEl ? reasonEl.value : '').trim();
+
+  if (!newName) { toast('강사명을 입력해주세요.', 'error'); return; }
+
+  const inst = instructors[idx];
+  inst.name        = newName;
+  inst.expertise   = newExp;
+  inst.match_reason = newReason;
+
+  if (inst.id) {
+    try {
+      const { error } = await supabaseClient
+        .from('instructor_recommendations')
+        .update({ name: newName.slice(0,50), expertise: newExp.slice(0,200), match_reason: newReason.slice(0,200) })
+        .eq('id', inst.id);
+      if (error) throw error;
+      toast('강사 정보가 수정되었습니다.', 'success');
+    } catch (e) {
+      console.warn('강사 수정 DB 실패:', e);
+      toast('수정 내용을 DB에 저장하지 못했습니다.', 'warning');
+    }
+  }
+
+  renderInstructors(instructors);
+}
+
+async function deleteInstructor(idx) {
+  const instructors = window._lastInstructors;
+  if (!instructors || !instructors[idx]) return;
+
+  const confirmed = await confirmDialog('강사 삭제', `${instructors[idx].name} 강사를 삭제하시겠습니까?`);
+  if (!confirmed) return;
+
+  const inst = instructors[idx];
+  if (inst.id) {
+    try {
+      const { error } = await supabaseClient
+        .from('instructor_recommendations')
+        .delete()
+        .eq('id', inst.id);
+      if (error) throw error;
+    } catch (e) {
+      console.warn('강사 삭제 DB 실패:', e);
+      toast('DB 삭제에 실패했습니다.', 'warning');
+    }
+  }
+
+  instructors.splice(idx, 1);
+  window._lastInstructors = instructors;
+  renderInstructors(instructors);
+  toast('강사가 삭제되었습니다.', 'info');
+}
+
+/* ── 강사 신규 추가 모달 ── */
+function openInstructorModal() {
+  document.getElementById('modal-title').textContent = '강사 추가';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <label style="font-size:12px;font-weight:700;color:var(--blue-700);">강사명</label>
+      <input id="inst-modal-name" class="form-input" maxlength="50" placeholder="강사명 (50자 이내)"
+             style="width:100%;padding:8px 10px;border:1.5px solid var(--color-border);border-radius:7px;font-size:13px;outline:none;" />
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-top:12px;">
+      <label style="font-size:12px;font-weight:700;color:var(--blue-700);">전문역량</label>
+      <input id="inst-modal-exp" class="form-input" maxlength="200" placeholder="전문역량 (200자 이내)"
+             style="width:100%;padding:8px 10px;border:1.5px solid var(--color-border);border-radius:7px;font-size:13px;outline:none;" />
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-top:12px;">
+      <label style="font-size:12px;font-weight:700;color:var(--blue-700);">추천사유</label>
+      <textarea id="inst-modal-reason" class="form-input" maxlength="200" rows="3" placeholder="추천사유 (200자 이내)"
+                style="width:100%;padding:8px 10px;border:1.5px solid var(--color-border);border-radius:7px;font-size:13px;resize:vertical;outline:none;"></textarea>
+    </div>`;
+  document.getElementById('modal-save-btn').innerHTML = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> 저장`;
+  state.modal.tab = 'instructorAdd';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('inst-modal-name').focus(), 60);
+}
+
+async function saveInstructorModal() {
+  const nameEl   = document.getElementById('inst-modal-name');
+  const expEl    = document.getElementById('inst-modal-exp');
+  const reasonEl = document.getElementById('inst-modal-reason');
+  const name   = (nameEl   ? nameEl.value   : '').trim();
+  const exp    = (expEl    ? expEl.value    : '').trim();
+  const reason = (reasonEl ? reasonEl.value : '').trim();
+  if (!name) { toast('강사명을 입력해주세요.', 'error'); return; }
+
+  const instructors = window._lastInstructors || [];
+  const newInst = { name: name.slice(0,50), expertise: exp.slice(0,200), match_reason: reason.slice(0,200) };
+
+  try {
+    const maxOrder = instructors.reduce((m, o) => Math.max(m, o.sort_order || 0), 0);
+    const row = { name: newInst.name, expertise: newInst.expertise, match_reason: newInst.match_reason, sort_order: maxOrder + 1 };
+    const { data, error } = await supabaseClient.from('instructor_recommendations').insert([row]).select('id, sort_order');
+    if (error) throw error;
+    if (data && data[0]) newInst.id = data[0].id;
+    toast('강사가 추가되었습니다.', 'success');
+  } catch (e) {
+    console.warn('강사 추가 DB 실패:', e);
+    toast('DB 저장에 실패했습니다.', 'warning');
+  }
+
+  instructors.push(newInst);
+  window._lastInstructors = instructors;
+  renderInstructors(instructors);
+  closeModal();
 }
 
 function showLoading() {
@@ -3880,7 +4176,7 @@ ${objList}
 ]
 - 강사명은 실제처럼 자연스러운 한국 이름으로 생성
 - 전문역량은 구체적인 기술/분야 나열
-- 추천 이유는 40~80자 한국어 평서문
+- 추천사유는 40~80자 한국어 평서문
 - JSON 외 다른 텍스트 절대 포함하지 말 것`;
 }
 
@@ -3918,8 +4214,9 @@ async function saveInstructorsToDB(instructors) {
       match_reason: inst.match_reason.slice(0, 200),
       sort_order:   i + 1,
     }));
-    const { error } = await supabaseClient.from('instructor_recommendations').insert(rows);
+    const { data: inserted, error } = await supabaseClient.from('instructor_recommendations').insert(rows).select('id, sort_order');
     if (error) throw error;
+    if (inserted) inserted.forEach(r => { const inst = instructors[r.sort_order - 1]; if (inst) inst.id = r.id; });
     toast(`강사 ${rows.length}명이 DB에 저장되었습니다.`, 'success');
   } catch (err) {
     console.warn('강사 DB 저장 실패:', err);
@@ -3960,8 +4257,10 @@ function renderInstructors(instructors) {
     countBadge.style.display = 'inline-flex';
   }
 
+  window._lastInstructors = instructors;
+
   const cards = instructors.map((inst, i) => `
-    <div class="instructor-card" style="animation-delay:${(i * 0.06).toFixed(2)}s;">
+    <div class="instructor-card" data-idx="${i}" data-id="${inst.id || ''}" style="animation-delay:${(i * 0.06).toFixed(2)}s;">
       <div class="instructor-number" aria-hidden="true">${i + 1}</div>
       <div class="instructor-body">
         <div class="instructor-name">${escapeHtml(inst.name)}</div>
@@ -3969,8 +4268,12 @@ function renderInstructors(instructors) {
           <span class="instructor-expertise-label">전문역량: </span>${escapeHtml(inst.expertise)}
         </div>
         <div class="instructor-reason">
-          <span class="instructor-reason-label">추천 이유: </span>${escapeHtml(inst.match_reason)}
+          <span class="instructor-reason-label">추천사유: </span>${escapeHtml(inst.match_reason)}
         </div>
+      </div>
+      <div class="inst-actions">
+        <button class="inst-btn inst-btn-edit" onclick="startEditInstructor(${i})">수정</button>
+        <button class="inst-btn inst-btn-delete" onclick="deleteInstructor(${i})">삭제</button>
       </div>
     </div>
   `).join('');
@@ -4241,7 +4544,7 @@ async function loadFromDB() {
   try {
     const { data: objectives, error: objErr } = await supabaseClient
       .from('learning_objectives')
-      .select('title, description, sort_order')
+      .select('id, title, description, sort_order')
       .order('sort_order', { ascending: true });
     if (!objErr && objectives && objectives.length > 0) {
       const parsed = objectives.map(r => ({ id: r.id, title: r.title, description: r.description }));
@@ -4254,7 +4557,7 @@ async function loadFromDB() {
   try {
     const { data: instructors, error: instErr } = await supabaseClient
       .from('instructor_recommendations')
-      .select('name, expertise, match_reason, sort_order')
+      .select('id, name, expertise, match_reason, sort_order')
       .order('sort_order', { ascending: true });
     if (!instErr && instructors && instructors.length > 0) {
       renderInstructors(instructors);
