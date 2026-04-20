@@ -1972,16 +1972,12 @@
               </div>
               <span class="tab-section-title">전문분야별 과정 목록</span>
             </div>
-            <button class="btn-add-edu-job" aria-label="직무 추가">
+            <button class="btn-add-edu-job" aria-label="전문분야 추가">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              + 직무 추가
+              전문분야 추가
             </button>
           </div>
-          <div class="record-list">
-            <div class="record-list-header">
-              <span class="record-list-title">저장된 전문분야별 과정 목록</span>
-              <span class="record-count-badge" id="edu-count-badge">0건</span>
-            </div>
+          <div style="overflow-x:auto;">
             <div id="edu-list"></div>
           </div>
         </div>
@@ -2404,8 +2400,16 @@ const MODAL_FORMS = {
 
   eduJob: `
     <div class="field">
-      <label>직무명 <span class="char-counter"><span id="edujob-name-c">0</span>/30</span></label>
-      <input type="text" id="edujob-name" maxlength="30" placeholder="예) 인사관리" />
+      <label>직무</label>
+      <select id="edujob-job" style="width:100%;padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:7px;font-size:14px;background:#fff;color:#1e293b;">
+        <option value="">직무 선택</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>전문분야</label>
+      <select id="edujob-specialty" style="width:100%;padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:7px;font-size:14px;background:#fff;color:#1e293b;" disabled>
+        <option value="">전문분야 선택</option>
+      </select>
     </div>`,
 
   eduCourse: `
@@ -2772,14 +2776,56 @@ function openModal(tab, editingId, extraData) {
 
   initCharCountersInEl(document.getElementById('modal-body'));
 
+  // eduJob: populate linked selects from job_roles
+  if (tab === 'eduJob') {
+    setTimeout(() => {
+      const allJobs = loadRecords('job');
+      const jobSel = document.getElementById('edujob-job');
+      const spSel  = document.getElementById('edujob-specialty');
+      if (!jobSel || !spSel) return;
+
+      const distinctJobs = [...new Set(allJobs.map(j => j.name).filter(Boolean))];
+      distinctJobs.forEach(jn => {
+        const opt = document.createElement('option');
+        opt.value = jn; opt.textContent = jn;
+        jobSel.appendChild(opt);
+      });
+
+      const populateSpecialty = (selectedJob) => {
+        spSel.innerHTML = '<option value="">전문분야 선택</option>';
+        if (!selectedJob) { spSel.disabled = true; return; }
+        const specs = [...new Set(
+          allJobs.filter(j => j.name === selectedJob && j.specialtyName)
+                 .map(j => j.specialtyName)
+        )];
+        specs.forEach(sp => {
+          const opt = document.createElement('option');
+          opt.value = sp; opt.textContent = sp;
+          spSel.appendChild(opt);
+        });
+        spSel.disabled = specs.length === 0;
+      };
+
+      jobSel.addEventListener('change', () => populateSpecialty(jobSel.value));
+
+      // Prefill if editing
+      if (isEdit) {
+        const job = loadEduJobs().find(j => j.id === editingId);
+        if (job) {
+          jobSel.value = job.job_category || '';
+          populateSpecialty(job.job_category || '');
+          setTimeout(() => { spSel.value = job.job_name || ''; }, 20);
+        }
+      } else {
+        populateSpecialty('');
+      }
+    }, 0);
+  }
+
   // Prefill if editing
   if (isEdit) {
     if (tab === 'eduJob') {
-      const job = loadEduJobs().find(j => j.id === editingId);
-      if (job) {
-        const el = document.getElementById('edujob-name');
-        if (el) { el.value = job.job_name || ''; el.dispatchEvent(new Event('input')); }
-      }
+      // handled above via setTimeout
     } else if (tab === 'eduCourse') {
       const course = loadEduCourses().find(c => c.id === editingId);
       if (course) {
@@ -2922,7 +2968,7 @@ const COUNTER_DEFS = [
   ['job-knowledge',         'job-knowledge-c',         200],
   ['job-skill',             'job-skill-c',             200],
   ['job-exp',               'job-exp-c',               200],
-  ['edujob-name',           'edujob-name-c',           30],
+  // edujob-name replaced by select — no char counter needed
   ['edu-course',            'edu-course-c',            200],
   ['edu-goal',              'edu-goal-c',              200],
   ['edu-target',            'edu-target-c',            200],
@@ -3054,7 +3100,7 @@ function setFormData(tab, data) {
 
 function validateRequired(tab, data) {
   if (!data.name || data.name.trim() === '') {
-    const labels = { job: '직무명', edu: '직무명', survey: '설문명', proposal: '제안 과정명', vision: '조직명', target: '성명' };
+    const labels = { job: '직무명', edu: '전문분야 명', survey: '설문명', proposal: '제안 과정명', vision: '조직명', target: '성명' };
     toast(`'${labels[tab]}' 항목은 필수 입력입니다.`, 'error');
     return false;
   }
@@ -3067,10 +3113,16 @@ function validateRequired(tab, data) {
 async function saveRecord(tab) {
   // Education 1:N: eduJob
   if (tab === 'eduJob') {
-    const nameEl = document.getElementById('edujob-name');
-    const jobName = (nameEl ? nameEl.value : '').trim();
+    const jobCategoryEl = document.getElementById('edujob-job');
+    const specialtyEl   = document.getElementById('edujob-specialty');
+    const jobCategory = (jobCategoryEl ? jobCategoryEl.value : '').trim();
+    const jobName     = (specialtyEl   ? specialtyEl.value   : '').trim();
+    if (!jobCategory) {
+      toast("'직무' 항목은 필수 입력입니다.", 'error');
+      return;
+    }
     if (!jobName) {
-      toast("'직무명' 항목은 필수 입력입니다.", 'error');
+      toast("'전문분야' 항목은 필수 입력입니다.", 'error');
       return;
     }
     const jobs = loadEduJobs();
@@ -3078,18 +3130,16 @@ async function saveRecord(tab) {
     if (editingId) {
       const idx = jobs.findIndex(j => j.id === editingId);
       if (idx !== -1) {
-        jobs[idx] = { ...jobs[idx], job_name: jobName, updatedAt: new Date().toISOString() };
+        jobs[idx] = { ...jobs[idx], job_name: jobName, job_category: jobCategory, updatedAt: new Date().toISOString() };
         saveEduJobs(jobs);
-        // DB 동기화 (실패해도 localStorage 유지)
-        await dbUpdate('education_jobs', editingId, { job_name: jobName });
+        await dbUpdate('education_jobs', editingId, { job_name: jobName, job_category: jobCategory });
         toast('전문분야가 수정되었습니다.', 'success');
       }
     } else {
-      const newJob = { id: generateId(), job_name: jobName, created_at: new Date().toISOString() };
+      const newJob = { id: generateId(), job_name: jobName, job_category: jobCategory, created_at: new Date().toISOString() };
       jobs.push(newJob);
       saveEduJobs(jobs);
-      // DB INSERT → UUID 교체
-      const uuid = await dbInsert('education_jobs', { job_name: jobName });
+      const uuid = await dbInsert('education_jobs', { job_name: jobName, job_category: jobCategory });
       if (uuid) {
         newJob.id = uuid;
         saveEduJobs(jobs);
@@ -3643,7 +3693,6 @@ function renderEduList() {
   const jobs    = loadEduJobs();
   const courses = loadEduCourses();
 
-  // badge shows number of jobs
   if (badge) badge.textContent = `${jobs.length}건`;
 
   if (jobs.length === 0) {
@@ -3653,70 +3702,69 @@ function renderEduList() {
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
         <p>등록된 전문분야가 없습니다.</p>
-        <small>'+ 추가' 버튼을 눌러 입력하세요.</small>
+        <small>'전문분야 추가' 버튼을 눌러 입력하세요.</small>
       </div>`;
     return;
   }
 
-  const svgPlus  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-  const svgEdit  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-  const svgDel   = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`;
+  const svgPlus = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  const svgEdit = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const svgDel  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`;
 
-  container.innerHTML = jobs.map(job => {
+  let rowsHtml = '';
+  jobs.forEach(job => {
     const jobCourses = courses.filter(c => c.job_id === job.id);
 
-    const courseCards = jobCourses.map(course => {
-      const courseFields = [
-        { label: '교육목표', value: course.education_goal  },
-        { label: '교육대상', value: course.target_audience },
-        { label: '세부내용', value: course.details         },
-      ].filter(f => f.value);
+    const headerLabel = job.job_category
+      ? `${escapeHtml(job.job_category)} &gt; ${escapeHtml(job.job_name)}`
+      : escapeHtml(job.job_name);
 
-      const courseFieldHtml = courseFields.map((f, fi, arr) => `
-        <div class="overview-field"${fi === arr.length - 1 ? ' style="border-bottom:none;"' : ''}>
-          <div class="overview-field-label">${escapeHtml(f.label)}</div>
-          <div class="overview-field-value">${escapeHtml(f.value)}</div>
-        </div>`).join('');
+    // 전문분야 그룹 헤더 행
+    rowsHtml += `
+      <tr class="edu-job-row" data-job-id="${job.id}">
+        <td colspan="4" style="background:var(--blue-50);padding:8px 12px;font-weight:600;color:var(--blue-700);font-size:13px;">
+          ${headerLabel}
+        </td>
+        <td style="background:var(--blue-50);text-align:center;white-space:nowrap;">
+          <button class="tbl-btn edit-job-btn" data-job-id="${job.id}" title="수정">${svgEdit}</button>
+          <button class="tbl-btn tbl-btn-del del-job-btn" data-job-id="${job.id}" title="삭제">${svgDel}</button>
+          <button class="tbl-btn add-course-btn" data-job-id="${job.id}" title="과정 추가" style="color:var(--blue-600);">${svgPlus}</button>
+        </td>
+      </tr>`;
 
-      const courseCreated = course.created_at || '';
-      return `
-        <div class="overview-card" style="margin:0 0 10px 24px; border-left:3px solid var(--blue-300);" data-course-id="${course.id}">
-          <div class="overview-card-header">
-            <h3 class="overview-card-title" style="font-size:16px;">${escapeHtml(course.course_name)}</h3>
-            <div class="overview-card-actions">
-              <button class="btn btn-ghost btn-sm edit-course-btn" data-course-id="${course.id}" aria-label="${escapeHtml(course.course_name)} 수정">${svgEdit} 수정</button>
-              <button class="btn btn-danger-ghost btn-sm del-course-btn" data-course-id="${course.id}" aria-label="${escapeHtml(course.course_name)} 삭제">${svgDel} 삭제</button>
-            </div>
-          </div>
-          ${courseFieldHtml ? `<div class="overview-card-body">${courseFieldHtml}</div>` : ''}
-          ${courseCreated ? `<div class="overview-card-footer">등록일: ${formatDate(courseCreated)}</div>` : ''}
-        </div>`;
-    }).join('');
+    if (jobCourses.length === 0) {
+      rowsHtml += `<tr><td colspan="5" style="padding:8px 16px;color:var(--gray-400);font-size:12px;font-style:italic;">등록된 과정이 없습니다.</td></tr>`;
+    } else {
+      jobCourses.forEach(course => {
+        rowsHtml += `
+          <tr data-course-id="${course.id}">
+            <td style="padding:8px 12px;">${escapeHtml(course.course_name || '')}</td>
+            <td style="padding:8px 12px;font-size:12px;color:var(--gray-600);">${escapeHtml(course.education_goal || '')}</td>
+            <td style="padding:8px 12px;font-size:12px;color:var(--gray-600);">${escapeHtml(course.target_audience || '')}</td>
+            <td style="padding:8px 12px;font-size:12px;color:var(--gray-600);">${escapeHtml(course.details || '')}</td>
+            <td style="text-align:center;white-space:nowrap;padding:6px 8px;">
+              <button class="tbl-btn edit-course-btn" data-course-id="${course.id}" title="수정">${svgEdit}</button>
+              <button class="tbl-btn tbl-btn-del del-course-btn" data-course-id="${course.id}" title="삭제">${svgDel}</button>
+            </td>
+          </tr>`;
+      });
+    }
+  });
 
-    const jobCreated = job.created_at || '';
-    return `
-      <div class="overview-card" style="margin-bottom:16px;" data-job-id="${job.id}">
-        <div class="overview-card-header">
-          <h2 class="overview-card-title">${escapeHtml(job.job_name)}</h2>
-          <div class="overview-card-actions">
-            <button class="btn btn-ghost btn-sm edit-job-btn" data-job-id="${job.id}" aria-label="${escapeHtml(job.job_name)} 수정">${svgEdit} 수정</button>
-            <button class="btn btn-danger-ghost btn-sm del-job-btn" data-job-id="${job.id}" aria-label="${escapeHtml(job.job_name)} 삭제">${svgDel} 삭제</button>
-          </div>
-        </div>
-        <div class="overview-card-body" style="padding-top:12px;">
-          ${courseCards}
-          <div style="padding:8px 0 0 24px;">
-            <button class="btn-add-course add-course-btn" data-job-id="${job.id}" aria-label="${escapeHtml(job.job_name)}에 과정 추가">
-              ${svgPlus} + 과정 추가
-            </button>
-          </div>
-        </div>
-        ${jobCreated ? `<div class="overview-card-footer">등록일: ${formatDate(jobCreated)}</div>` : ''}
-      </div>
-    `;
-  }).join('');
+  container.innerHTML = `
+    <table class="target-table" aria-label="전문분야별 교육과정 목록">
+      <thead>
+        <tr>
+          <th style="width:20%;">과정명</th>
+          <th style="width:22%;">교육목표</th>
+          <th style="width:22%;">교육대상</th>
+          <th>세부내용</th>
+          <th style="width:90px;text-align:center;">관리</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>`;
 
-  // Bind events
   container.querySelectorAll('.edit-job-btn').forEach(btn => {
     btn.addEventListener('click', e => { e.stopPropagation(); openModal('eduJob', btn.dataset.jobId); });
   });
@@ -5137,7 +5185,7 @@ async function loadFromDB() {
       .select('*')
       .order('created_at', { ascending: true });
     if (!jobErr && jobs && jobs.length > 0) {
-      const jobRecords = jobs.map(j => ({ id: j.id, job_name: j.job_name, created_at: j.created_at }));
+      const jobRecords = jobs.map(j => ({ id: j.id, job_name: j.job_name, job_category: j.job_category || '', created_at: j.created_at }));
       localStorage.setItem(EDU_JOBS_KEY, JSON.stringify(jobRecords));
     }
     if (!courseErr && courses && courses.length > 0) {
