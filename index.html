@@ -1937,18 +1937,27 @@
                 </svg>
               </div>
               <span class="tab-section-title">전문분야 목록</span>
+              <span class="record-count-badge" id="job-count-badge" style="margin-left:8px;">0건</span>
             </div>
             <button class="btn-add-record" data-tab="job" aria-label="전문분야 추가">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               추가
             </button>
           </div>
-          <div class="record-list">
-            <div class="record-list-header">
-              <span class="record-list-title">저장된 전문분야 목록</span>
-              <span class="record-count-badge" id="job-count-badge">0건</span>
-            </div>
-            <div id="job-list"></div>
+          <div style="overflow-x:auto;">
+            <table class="target-table" aria-label="전문분야 목록">
+              <thead>
+                <tr>
+                  <th style="width:18%;">직무명</th>
+                  <th style="width:20%;">전문분야명</th>
+                  <th>전문분야 정의</th>
+                  <th style="width:100px;text-align:center;">관리</th>
+                </tr>
+              </thead>
+              <tbody id="job-tbody">
+                <tr><td colspan="4" style="text-align:center;color:var(--gray-400);padding:30px;">등록된 데이터가 없습니다.</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -3285,7 +3294,41 @@ function getRecordFields(tab, record) {
   }
 }
 
+function renderJobTable() {
+  const tbody = document.getElementById('job-tbody');
+  const badge = document.getElementById('job-count-badge');
+  if (!tbody) return;
+
+  const records = loadRecords('job');
+  if (badge) badge.textContent = `${records.length}건`;
+
+  if (records.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--gray-400);padding:30px;">등록된 데이터가 없습니다.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = records.map(r => `
+    <tr data-id="${r.id}">
+      <td style="font-weight:600;color:var(--gray-900);">${escapeHtml(r.name || '')}</td>
+      <td style="color:var(--blue-700);font-weight:500;">${escapeHtml(r.specialtyName || '-')}</td>
+      <td style="color:var(--gray-700);font-size:12px;">${escapeHtml(r.definition ? (r.definition.length > 60 ? r.definition.slice(0,60)+'…' : r.definition) : '-')}</td>
+      <td style="text-align:center;white-space:nowrap;">
+        <button class="target-action-btn target-edit-btn job-edit-btn" data-id="${r.id}" style="margin-right:4px;">수정</button>
+        <button class="target-action-btn target-delete-btn job-del-btn" data-id="${r.id}">삭제</button>
+      </td>
+    </tr>`).join('');
+
+  tbody.querySelectorAll('.job-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => editRecord('job', btn.dataset.id));
+  });
+  tbody.querySelectorAll('.job-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteRecord('job', btn.dataset.id));
+  });
+}
+
 function renderList(tab) {
+  if (tab === 'job') { renderJobTable(); return; }
+
   const container = document.getElementById(`${tab}-list`);
   const badge     = document.getElementById(`${tab}-count-badge`);
   if (!container) return;
