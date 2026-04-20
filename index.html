@@ -2365,8 +2365,12 @@ const MODAL_FORMS = {
       <input type="text" id="job-name" maxlength="30" placeholder="예) HRD 기획자" />
     </div>
     <div class="field">
-      <label>직무정의 <span class="char-counter"><span id="job-def-c">0</span>/200</span></label>
-      <textarea id="job-def" rows="3" maxlength="200" placeholder="직무에 대한 정의를 입력하세요."></textarea>
+      <label>전문분야명 <span class="char-counter"><span id="job-specialty-name-c">0</span>/30</span></label>
+      <input type="text" id="job-specialty-name" maxlength="30" placeholder="예) 클라우드 인프라" />
+    </div>
+    <div class="field">
+      <label>전문분야 정의 <span class="char-counter"><span id="job-def-c">0</span>/200</span></label>
+      <textarea id="job-def" rows="3" maxlength="200" placeholder="전문분야에 대한 정의를 입력하세요."></textarea>
     </div>
     <div class="field">
       <label>주요업무 <span class="char-counter"><span id="job-main-c">0</span>/200</span></label>
@@ -2637,6 +2641,7 @@ function toDbRow(tab, record) {
   switch (tab) {
     case 'job': return {
       job_name:        record.name,
+      specialty_name:  record.specialtyName,
       job_definition:  record.definition,
       main_tasks:      record.mainWork,
       task_details:    record.detail,
@@ -2881,6 +2886,7 @@ function switchTab(tab) {
    ============================================================ */
 const COUNTER_DEFS = [
   ['job-name',              'job-name-c',              30],
+  ['job-specialty-name',    'job-specialty-name-c',    30],
   ['job-def',               'job-def-c',               200],
   ['job-main',              'job-main-c',              200],
   ['job-detail',            'job-detail-c',            200],
@@ -2936,13 +2942,14 @@ function getFormData(tab) {
   const g = id => (document.getElementById(id) || {}).value || '';
   switch (tab) {
     case 'job': return {
-      name:       g('job-name'),
-      definition: g('job-def'),
-      mainWork:   g('job-main'),
-      detail:     g('job-detail'),
-      knowledge:  g('job-knowledge'),
-      skill:      g('job-skill'),
-      experience: g('job-exp'),
+      name:          g('job-name'),
+      specialtyName: g('job-specialty-name'),
+      definition:    g('job-def'),
+      mainWork:      g('job-main'),
+      detail:        g('job-detail'),
+      knowledge:     g('job-knowledge'),
+      skill:         g('job-skill'),
+      experience:    g('job-exp'),
     };
     case 'edu': return {
       name:   g('edu-name'),
@@ -2988,8 +2995,8 @@ function setFormData(tab, data) {
   };
   switch (tab) {
     case 'job':
-      s('job-name', data.name); s('job-def', data.definition); s('job-main', data.mainWork);
-      s('job-detail', data.detail); s('job-knowledge', data.knowledge);
+      s('job-name', data.name); s('job-specialty-name', data.specialtyName); s('job-def', data.definition);
+      s('job-main', data.mainWork); s('job-detail', data.detail); s('job-knowledge', data.knowledge);
       s('job-skill', data.skill); s('job-exp', data.experience);
       break;
     case 'edu':
@@ -3252,12 +3259,13 @@ function getRecordSub(tab, record) {
 function getRecordFields(tab, record) {
   switch (tab) {
     case 'job': return [
-      { label: '직무정의',   value: record.definition },
-      { label: '주요업무',   value: record.mainWork   },
-      { label: '업무내용',   value: record.detail     },
-      { label: '전문지식',   value: record.knowledge  },
-      { label: 'Skill / Tool', value: record.skill    },
-      { label: '업무경험',   value: record.experience },
+      { label: '전문분야명',    value: record.specialtyName },
+      { label: '전문분야 정의', value: record.definition    },
+      { label: '주요업무',      value: record.mainWork      },
+      { label: '업무내용',      value: record.detail        },
+      { label: '전문지식',      value: record.knowledge     },
+      { label: 'Skill / Tool',  value: record.skill         },
+      { label: '업무경험',      value: record.experience    },
     ];
     case 'survey': return [
       { label: '응답결과', value: record.result },
@@ -3732,12 +3740,13 @@ function showSpecialtyDetail(specialtyName) {
     body.innerHTML = `<p style="color:var(--gray-500);font-size:13px;padding:16px 0;">해당 전문분야 정보를 찾을 수 없습니다.</p>`;
   } else {
     const fields = [
-      { label: '직무정의', value: job.definition },
-      { label: '주요업무', value: job.mainWork },
-      { label: '업무내용', value: job.detail },
-      { label: '전문지식', value: job.knowledge },
-      { label: 'Skill / Tool', value: job.skill },
-      { label: '업무경험', value: job.experience },
+      { label: '전문분야명',    value: job.specialtyName },
+      { label: '전문분야 정의', value: job.definition    },
+      { label: '주요업무',      value: job.mainWork      },
+      { label: '업무내용',      value: job.detail        },
+      { label: '전문지식',      value: job.knowledge     },
+      { label: 'Skill / Tool',  value: job.skill         },
+      { label: '업무경험',      value: job.experience    },
     ];
     body.innerHTML = fields.filter(f => f.value).map(f => `
       <div class="overview-field">
@@ -3948,7 +3957,8 @@ function buildPrompt() {
     sections.push('=== 전문분야 정보 ===');
     jobs.forEach((r, i) => {
       sections.push(`[전문분야 ${i + 1}] ${r.name}`);
-      if (r.definition)  sections.push(`직무정의: ${r.definition}`);
+      if (r.specialtyName) sections.push(`전문분야명: ${r.specialtyName}`);
+      if (r.definition)    sections.push(`전문분야 정의: ${r.definition}`);
       if (r.mainWork)    sections.push(`주요업무: ${r.mainWork}`);
       if (r.detail)      sections.push(`업무내용: ${r.detail}`);
       if (r.knowledge)   sections.push(`전문지식: ${r.knowledge}`);
@@ -5032,15 +5042,16 @@ async function loadFromDB() {
       .order('created_at', { ascending: true });
     if (!error && data && data.length > 0) {
       const records = data.map(r => ({
-        id:         r.id,
-        name:       r.job_name,
-        definition: r.job_definition,
-        mainWork:   r.main_tasks,
-        detail:     r.task_details,
-        knowledge:  r.expertise,
-        skill:      r.skills_tools,
-        experience: r.work_experience,
-        createdAt:  r.created_at,
+        id:            r.id,
+        name:          r.job_name,
+        specialtyName: r.specialty_name,
+        definition:    r.job_definition,
+        mainWork:      r.main_tasks,
+        detail:        r.task_details,
+        knowledge:     r.expertise,
+        skill:         r.skills_tools,
+        experience:    r.work_experience,
+        createdAt:     r.created_at,
       }));
       saveRecords('job', records);
       renderList('job');
