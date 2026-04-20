@@ -2490,13 +2490,15 @@ const MODAL_FORMS = {
       <input type="text" id="target-phone" maxlength="30" placeholder="예) 010-1234-5678" />
     </div>
     <div class="field">
-      <label>직무 <span class="char-counter"><span id="target-job-c">0</span>/200</span></label>
-      <input type="text" id="target-job" maxlength="200" placeholder="예) HRD 기획자" />
+      <label>직무</label>
+      <select id="target-job" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font);color:var(--color-text);background:var(--gray-50);">
+        <option value="">-- 선택하세요 --</option>
+      </select>
     </div>
     <div class="field">
       <label>전문분야</label>
       <select id="target-specialty" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font);color:var(--color-text);background:var(--gray-50);">
-        <option value="">-- 선택하세요 --</option>
+        <option value="">-- 직무를 먼저 선택하세요 --</option>
       </select>
     </div>
     <div class="field">
@@ -2803,26 +2805,44 @@ function openModal(tab, editingId, extraData) {
 
   document.getElementById('modal-overlay').classList.add('open');
 
-  // target 탭: 전문분야 select 동적 populate
+  // target 탭: 직무 select populate + 전문분야 연동 필터
   if (tab === 'target') {
     setTimeout(() => {
-      const sel = document.getElementById('target-specialty');
-      if (sel) {
-        const jobs = loadRecords('job');
-        const currentVal = sel.value;
-        sel.innerHTML = '<option value="">-- 선택하세요 --</option>';
-        jobs.forEach(j => {
+      const jobs = loadRecords('job');
+
+      // 직무 select: distinct 직무명
+      const jobSel = document.getElementById('target-job');
+      const spSel  = document.getElementById('target-specialty');
+      if (!jobSel || !spSel) return;
+
+      const distinctJobs = [...new Set(jobs.map(j => j.name).filter(Boolean))];
+      jobSel.innerHTML = '<option value="">-- 선택하세요 --</option>';
+      distinctJobs.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        jobSel.appendChild(opt);
+      });
+
+      // 전문분야 select: 직무 선택에 따라 필터
+      function populateSpecialty(selectedJob) {
+        spSel.innerHTML = selectedJob
+          ? '<option value="">-- 선택하세요 --</option>'
+          : '<option value="">-- 직무를 먼저 선택하세요 --</option>';
+        if (!selectedJob) { spSel.disabled = true; return; }
+        spSel.disabled = false;
+        const filtered = [...new Set(
+          jobs.filter(j => j.name === selectedJob && j.specialtyName)
+              .map(j => j.specialtyName)
+        )];
+        filtered.forEach(sp => {
           const opt = document.createElement('option');
-          opt.value = j.name || '';
-          opt.textContent = j.name || '';
-          sel.appendChild(opt);
+          opt.value = sp; opt.textContent = sp;
+          spSel.appendChild(opt);
         });
-        const directOpt = document.createElement('option');
-        directOpt.value = '__direct__';
-        directOpt.textContent = '직접 입력';
-        sel.appendChild(directOpt);
-        if (currentVal) sel.value = currentVal;
       }
+
+      populateSpecialty(jobSel.value);
+      jobSel.addEventListener('change', () => populateSpecialty(jobSel.value));
     }, 30);
   }
 
@@ -2921,7 +2941,6 @@ const COUNTER_DEFS = [
   ['target-name',           'target-name-c',           30],
   ['target-email',          'target-email-c',          200],
   ['target-phone',          'target-phone-c',          30],
-  ['target-job',            'target-job-c',            200],
   ['target-survey-name',    'target-survey-name-c',    200],
 ];
 
@@ -2988,7 +3007,7 @@ function getFormData(tab) {
       name:          g('target-name'),
       email:         g('target-email'),
       phone:         g('target-phone'),
-      job:           g('target-job'),
+      job:           document.getElementById('target-job')?.value || '',
       specialty:     document.getElementById('target-specialty')?.value || '',
       survey_name:   g('target-survey-name'),
       survey_status: document.getElementById('target-survey-status')?.value || null,
@@ -3025,8 +3044,9 @@ function setFormData(tab, data) {
       break;
     case 'target':
       s('target-name', data.name); s('target-email', data.email); s('target-phone', data.phone);
-      s('target-job', data.job); s('target-survey-name', data.survey_name);
-      { const sel = document.getElementById('target-specialty'); if (sel) sel.value = data.specialty || ''; }
+      s('target-survey-name', data.survey_name);
+      { const jobSel = document.getElementById('target-job'); if (jobSel) { jobSel.value = data.job || ''; jobSel.dispatchEvent(new Event('change')); } }
+      { setTimeout(() => { const spSel = document.getElementById('target-specialty'); if (spSel) spSel.value = data.specialty || ''; }, 20); }
       { const sel = document.getElementById('target-survey-status'); if (sel) sel.value = data.survey_status || ''; }
       break;
   }
