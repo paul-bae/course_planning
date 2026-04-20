@@ -2827,10 +2827,11 @@ function initModal() {
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
   document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
 
-  // Click on dimmed overlay closes modal
-  document.getElementById('modal-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('modal-overlay')) closeModal();
-  });
+  // 오버레이 배경 클릭 시에만 닫힘 (드래그 후 닫힘 방지)
+  const _modalOverlay = document.getElementById('modal-overlay');
+  let _modalMouseDownOnOverlay = false;
+  _modalOverlay.addEventListener('mousedown', e => { _modalMouseDownOnOverlay = e.target === _modalOverlay; });
+  _modalOverlay.addEventListener('click', e => { if (e.target === _modalOverlay && _modalMouseDownOnOverlay) closeModal(); });
 
   document.getElementById('modal-save-btn').addEventListener('click', async () => {
     const tab = state.modal.tab;
@@ -4957,13 +4958,21 @@ function initKeyboardShortcuts() {
     }
   });
 
-  // specialty popup: click outside to close
+  // specialty popup: 오버레이 배경 클릭 시에만 닫힘
   const spOverlay = document.getElementById('specialty-popup-overlay');
-  if (spOverlay) spOverlay.addEventListener('click', e => { if (e.target === spOverlay) closeSpecialtyPopup(); });
+  if (spOverlay) {
+    let _spMouseDownOnOverlay = false;
+    spOverlay.addEventListener('mousedown', e => { _spMouseDownOnOverlay = e.target === spOverlay; });
+    spOverlay.addEventListener('click', e => { if (e.target === spOverlay && _spMouseDownOnOverlay) closeSpecialtyPopup(); });
+  }
 
-  // survey modal: click outside to close
+  // survey modal: 오버레이 배경 클릭 시에만 닫힘
   const smOverlay = document.getElementById('survey-modal-overlay');
-  if (smOverlay) smOverlay.addEventListener('click', e => { if (e.target === smOverlay) closeSurveyModal(); });
+  if (smOverlay) {
+    let _smMouseDownOnOverlay = false;
+    smOverlay.addEventListener('mousedown', e => { _smMouseDownOnOverlay = e.target === smOverlay; });
+    smOverlay.addEventListener('click', e => { if (e.target === smOverlay && _smMouseDownOnOverlay) closeSurveyModal(); });
+  }
 }
 
 /* ============================================================
