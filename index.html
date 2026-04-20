@@ -3197,9 +3197,13 @@ async function saveRecord(tab) {
       if (uuid) {
         newRecord.id = uuid;
         saveRecords(tab, records);
+        toast('저장되었습니다.', 'success');
+      } else {
+        toast('로컬 저장은 완료됐으나 DB 저장에 실패했습니다. 리프레시 시 데이터가 사라질 수 있습니다.', 'warning', 5000);
       }
+    } else {
+      toast('저장되었습니다.', 'success');
     }
-    toast('저장되었습니다.', 'success');
   }
 
   closeModal();
