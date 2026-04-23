@@ -413,7 +413,7 @@
       padding-top: 4px;
     }
     .overview-field {
-      padding: 14px 0;
+      padding: 18px 0;
       border-bottom: 1px solid var(--gray-200);
     }
     .overview-field:last-child {
@@ -429,7 +429,7 @@
       border-left: 3px solid var(--blue-500);
       padding: 2px 8px 2px 7px;
       border-radius: 0 4px 4px 0;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       letter-spacing: .3px;
     }
     .overview-field-value {
@@ -823,10 +823,9 @@
       display: flex;
       gap: 6px;
       flex-shrink: 0;
-      opacity: 0;
-      transition: opacity .15s;
+      align-items: center;
+      opacity: 1;
     }
-    .objective-card:hover .obj-actions { opacity: 1; }
     .obj-btn {
       padding: 4px 10px;
       border-radius: 6px;
@@ -849,6 +848,120 @@
       background: #FEF2F2;
     }
     .obj-btn-delete:hover { background: #FEE2E2; }
+    .obj-course-select {
+      appearance: none;
+      padding: 3px 24px 3px 10px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font);
+      letter-spacing: -0.2px;
+      border: 1.5px solid var(--blue-200);
+      border-radius: 6px;
+      background: var(--blue-50) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 6px center;
+      color: var(--blue-700);
+      cursor: pointer;
+      outline: none;
+      transition: border-color .15s, background .15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+      align-self: flex-start;
+    }
+    .obj-course-select:focus { border-color: var(--blue-400); background-color: #e0e7ff; }
+    .obj-course-select.assigned { background-color: #dbeafe; border-color: var(--blue-400); }
+    #inst-course-select {
+      appearance: none;
+      padding: 8px 30px 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font);
+      border: 1.5px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;
+      color: var(--gray-700);
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      transition: border-color .15s, box-shadow .15s;
+      white-space: nowrap;
+    }
+    #inst-course-select:hover { border-color: var(--blue-400); }
+    #inst-course-select:focus { border-color: var(--blue-500); box-shadow: 0 0 0 2px rgba(99,102,241,.15); }
+
+    /* 강사추천 과정그룹 */
+    .inst-group { margin-bottom: 16px; }
+    .inst-group-title {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 700; color: var(--blue-700);
+      background: var(--blue-50); border: 1.5px solid var(--blue-200);
+      border-radius: 20px; padding: 4px 14px;
+      margin-bottom: 8px; letter-spacing: -0.2px;
+    }
+
+    /* 과정 개요 팝업 */
+    #course-overview-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15,23,42,.45); backdrop-filter: blur(3px);
+      z-index: 8600; align-items: center; justify-content: center; padding: 32px;
+    }
+    #course-overview-overlay.open { display: flex; }
+    #course-overview-popup {
+      background: var(--color-surface); border-radius: var(--radius-xl);
+      width: 860px; max-width: 100%; max-height: 90vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      animation: modalIn .22s cubic-bezier(.34,1.56,.64,1);
+    }
+    #course-overview-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 28px; border-bottom: 1px solid var(--color-border); flex-shrink: 0;
+    }
+    #course-overview-body { flex: 1; overflow-y: auto; padding: 24px 28px 32px; }
+    .co-group { margin-bottom: 36px; }
+    .co-group-title {
+      font-size: 16px; font-weight: 800; color: var(--blue-700);
+      background: var(--blue-50); border-left: 4px solid var(--blue-500);
+      padding: 8px 16px; border-radius: 0 8px 8px 0;
+      margin-bottom: 16px; letter-spacing: -0.3px;
+    }
+    .co-section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      color: var(--gray-400); letter-spacing: .8px;
+      margin: 14px 0 8px; padding-bottom: 4px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .co-obj-item {
+      display: flex; gap: 10px; padding: 8px 0;
+      border-bottom: 1px solid var(--gray-100); font-size: 13px;
+    }
+    .co-obj-num {
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      background: var(--blue-600); color: #fff;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .co-inst-item {
+      display: flex; gap: 8px; padding: 8px 0;
+      border-bottom: 1px solid var(--gray-100); font-size: 13px;
+    }
+    .co-inst-num {
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      background: var(--gray-700); color: #fff;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .co-overview-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px;
+    }
+    .co-overview-field { font-size: 13px; }
+    .co-overview-field-label { font-size: 11px; font-weight: 700; color: var(--blue-600); margin-bottom: 2px; }
+    #course-overview-print-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 600; font-family: var(--font);
+      background: #fff; border: 1.5px solid var(--gray-300); color: var(--gray-700);
+      cursor: pointer; transition: border-color .15s; white-space: nowrap;
+    }
+    #course-overview-print-btn:hover { border-color: var(--blue-400); color: var(--blue-600); }
 
     /* 인라인 편집 폼 */
     .obj-edit-form { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -1181,140 +1294,6 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── Education 1:N Hierarchy ── */
-    .btn-add-edu-job {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 7px 14px;
-      background: linear-gradient(135deg, var(--blue-600), var(--blue-700));
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      font-weight: 600;
-      font-family: var(--font);
-      cursor: pointer;
-      box-shadow: 0 1px 3px rgba(37,99,235,.30);
-      transition: background .15s, box-shadow .15s, transform .1s;
-      white-space: nowrap;
-    }
-    .btn-add-edu-job:hover {
-      background: linear-gradient(135deg, var(--blue-700), var(--blue-800));
-      box-shadow: 0 3px 10px rgba(37,99,235,.35);
-    }
-    .btn-add-edu-job:active { transform: scale(.97); }
-    .btn-add-edu-job:focus-visible {
-      outline: 2px solid var(--blue-500);
-      outline-offset: 2px;
-    }
-
-    .edu-job-block {
-      margin-bottom: 10px;
-      border: 1.5px solid var(--blue-200);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-    }
-
-    .edu-job-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: var(--blue-50);
-      border-bottom: 1px solid var(--blue-100);
-    }
-    .edu-job-header-body {
-      flex: 1;
-      min-width: 0;
-    }
-    .edu-job-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--blue-900);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .edu-job-header-actions {
-      display: flex;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-
-    .edu-courses-area {
-      background: var(--color-surface);
-    }
-
-    .edu-course-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px 8px 28px;
-      border-bottom: 1px solid var(--gray-100);
-      transition: background .12s;
-    }
-    .edu-course-item:last-child {
-      border-bottom: none;
-    }
-    .edu-course-item:hover {
-      background: var(--gray-50);
-    }
-    .edu-course-arrow {
-      flex-shrink: 0;
-      color: var(--gray-400);
-      font-size: 12px;
-      margin-right: 2px;
-    }
-    .edu-course-body {
-      flex: 1;
-      min-width: 0;
-    }
-    .edu-course-name {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--gray-700);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .edu-course-actions {
-      display: flex;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-
-    .edu-add-course-row {
-      display: flex;
-      align-items: center;
-      padding: 7px 14px 7px 28px;
-      background: var(--gray-50);
-      border-top: 1px dashed var(--gray-200);
-    }
-    .btn-add-course {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      background: transparent;
-      color: var(--blue-600);
-      border: 1.5px dashed var(--blue-300);
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 600;
-      font-family: var(--font);
-      cursor: pointer;
-      transition: background .12s, border-color .12s;
-      white-space: nowrap;
-    }
-    .btn-add-course:hover {
-      background: var(--blue-50);
-      border-color: var(--blue-500);
-    }
-    .btn-add-course:focus-visible {
-      outline: 2px solid var(--blue-500);
-      outline-offset: 2px;
-    }
 
     /* ── Instructor Section ── */
     #instructor-section {
@@ -1681,15 +1660,15 @@
       z-index: 8500;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 32px;
     }
     #specialty-popup-overlay.open { display: flex; }
     #specialty-popup {
       background: var(--color-surface);
       border-radius: var(--radius-xl);
-      width: 520px;
+      width: 700px;
       max-width: 100%;
-      max-height: 80vh;
+      max-height: 88vh;
       display: flex;
       flex-direction: column;
       box-shadow: var(--shadow-lg);
@@ -1700,12 +1679,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
+      padding: 20px 28px;
       border-bottom: 1px solid var(--color-border);
       flex-shrink: 0;
     }
     #specialty-popup-close {
-      width: 28px; height: 28px;
+      width: 32px; height: 32px;
       border: none; background: var(--gray-100);
       border-radius: var(--radius-sm);
       cursor: pointer; display: flex;
@@ -1716,7 +1695,7 @@
     #specialty-popup-close:hover { background: var(--gray-200); color: var(--gray-800); }
     #specialty-popup-body {
       flex: 1; overflow-y: auto;
-      padding: 16px 20px;
+      padding: 20px 28px 28px;
       scrollbar-width: thin;
       scrollbar-color: var(--gray-300) transparent;
     }
@@ -1839,21 +1818,21 @@
           <span class="tab-dot" aria-hidden="true"></span>과정개요
         </button>
         <button class="tab-btn" data-tab="target" role="tab" aria-selected="false">
-          <span class="tab-dot" aria-hidden="true"></span>교육대상자
+          <span class="tab-dot" aria-hidden="true"></span>교육대상자/조직
         </button>
         <button class="tab-btn" data-tab="job"      role="tab" aria-selected="false">
           <span class="tab-dot" aria-hidden="true"></span>전문분야
         </button>
-        <button class="tab-btn" data-tab="edu"      role="tab" aria-selected="false">
+        <button class="tab-btn" data-tab="edu"      role="tab" aria-selected="false" style="display:none">
           <span class="tab-dot" aria-hidden="true"></span>전문분야별 과정
         </button>
         <button class="tab-btn" data-tab="survey"   role="tab" aria-selected="false">
           <span class="tab-dot" aria-hidden="true"></span>설문결과
         </button>
-        <button class="tab-btn" data-tab="proposal" role="tab" aria-selected="false">
+        <button class="tab-btn" data-tab="proposal" role="tab" aria-selected="false" style="display:none">
           <span class="tab-dot" aria-hidden="true"></span>교육제안
         </button>
-        <button class="tab-btn" data-tab="vision"   role="tab" aria-selected="false">
+        <button class="tab-btn" data-tab="vision"   role="tab" aria-selected="false" style="display:none">
           <span class="tab-dot" aria-hidden="true"></span>대상조직
         </button>
       </nav>
@@ -1884,47 +1863,93 @@
 
         <!-- ── 교육대상자 탭 ── -->
         <div id="tab-target" class="tab-pane" style="display:none">
-          <div class="tab-section-header" style="margin-bottom:12px;">
-            <div class="tab-section-header-left">
-              <div class="tab-section-icon" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 010 7.75"/>
-                </svg>
+
+          <!-- 영역1: 교육대상자 목록 카드 -->
+          <div style="background:#fff;border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:20px 24px 24px;">
+            <div class="tab-section-header" style="margin-bottom:12px;">
+              <div class="tab-section-header-left">
+                <div class="tab-section-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 010 7.75"/>
+                  </svg>
+                </div>
+                <span class="tab-section-title">교육대상자</span>
+                <span class="record-count-badge" id="target-count-text" style="margin-left:4px;">0명</span>
               </div>
-              <span class="tab-section-title">교육대상자 목록</span>
-              <span class="record-count-badge" id="target-count-text" style="margin-left:4px;">0명</span>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn btn-outline btn-sm" id="survey-send-btn" onclick="openSurveyModal()" aria-label="설문 발송">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  설문 발송
+                </button>
+                <button class="btn-add-record" data-tab="target" aria-label="교육대상자 추가">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  추가
+                </button>
+              </div>
             </div>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <button class="btn btn-outline btn-sm" id="survey-send-btn" onclick="openSurveyModal()" aria-label="설문 발송">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                설문 발송
-              </button>
-              <button class="btn-add-record" data-tab="target" aria-label="교육대상자 추가">
+            <div style="overflow-x:auto;overflow-y:auto;max-height:420px;border:1px solid var(--gray-100);border-radius:var(--radius-md);">
+              <table class="target-table" aria-label="교육대상자 목록">
+                <thead style="position:sticky;top:0;z-index:1;">
+                  <tr>
+                    <th style="width:36px;"><input type="checkbox" id="target-check-all" aria-label="전체 선택" /></th>
+                    <th>성명</th>
+                    <th>이메일</th>
+                    <th>핸드폰</th>
+                    <th>직무</th>
+                    <th>전문분야</th>
+                    <th>설문상태</th>
+                    <th style="width:80px;">관리</th>
+                  </tr>
+                </thead>
+                <tbody id="target-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 두 영역 사이 구분 레이블 -->
+          <div style="display:flex;align-items:center;gap:12px;margin:28px 0 20px;">
+            <div style="flex:1;height:1px;background:linear-gradient(to right, transparent, var(--color-border));"></div>
+            <span style="font-size:11px;font-weight:600;letter-spacing:0.06em;color:var(--gray-400);text-transform:uppercase;white-space:nowrap;">조직 등록</span>
+            <div style="flex:1;height:1px;background:linear-gradient(to left, transparent, var(--color-border));"></div>
+          </div>
+
+          <!-- 영역2: 조직 등록 카드 -->
+          <div style="background:#fff;border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);padding:20px 24px 24px;">
+            <div class="tab-section-header" style="margin-bottom:12px;">
+              <div class="tab-section-header-left">
+                <div class="tab-section-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+                  </svg>
+                </div>
+                <span class="tab-section-title">조직</span>
+                <span class="record-count-badge" id="orgreg-count-badge" style="margin-left:4px;">0건</span>
+              </div>
+              <button class="btn-add-record" data-tab="orgReg" aria-label="조직 추가">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 추가
               </button>
             </div>
+            <div style="overflow-x:auto;overflow-y:auto;max-height:420px;border:1px solid var(--gray-100);border-radius:var(--radius-md);">
+              <table class="target-table" aria-label="조직 등록 목록">
+                <thead style="position:sticky;top:0;z-index:1;">
+                  <tr>
+                    <th style="width:30%;">조직명</th>
+                    <th style="width:25%;">직무</th>
+                    <th>전문분야</th>
+                    <th style="width:80px;text-align:center;">관리</th>
+                  </tr>
+                </thead>
+                <tbody id="orgreg-tbody">
+                  <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gray-400);font-size:13px;">등록된 조직이 없습니다.</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div style="overflow-x:auto;">
-            <table class="target-table" aria-label="교육대상자 목록">
-              <thead>
-                <tr>
-                  <th style="width:36px;"><input type="checkbox" id="target-check-all" aria-label="전체 선택" /></th>
-                  <th>성명</th>
-                  <th>이메일</th>
-                  <th>핸드폰</th>
-                  <th>직무</th>
-                  <th>전문분야</th>
-                  <th>설문상태</th>
-                  <th style="width:80px;">관리</th>
-                </tr>
-              </thead>
-              <tbody id="target-tbody"></tbody>
-            </table>
-          </div>
+
         </div>
 
         <!-- ── 직무 탭 ── -->
@@ -2096,7 +2121,7 @@
             <span class="chip-check" aria-hidden="true">
               <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chip-check-icon" style="display:none"><polyline points="2 6 5 9 10 3"/></svg>
             </span>
-            교육대상자 <span class="chip-count">(0명)</span>
+            교육대상자/조직 <span class="chip-count">(0명)</span>
           </div>
           <div class="data-chip" id="chip-job">
             <span class="chip-check" aria-hidden="true">
@@ -2104,7 +2129,7 @@
             </span>
             전문분야 <span class="chip-count">(0건)</span>
           </div>
-          <div class="data-chip" id="chip-edu">
+          <div class="data-chip" id="chip-edu" style="display:none">
             <span class="chip-check" aria-hidden="true">
               <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chip-check-icon" style="display:none"><polyline points="2 6 5 9 10 3"/></svg>
             </span>
@@ -2116,13 +2141,13 @@
             </span>
             설문결과 <span class="chip-count">(0건)</span>
           </div>
-          <div class="data-chip" id="chip-proposal">
+          <div class="data-chip" id="chip-proposal" style="display:none">
             <span class="chip-check" aria-hidden="true">
               <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chip-check-icon" style="display:none"><polyline points="2 6 5 9 10 3"/></svg>
             </span>
             교육제안 <span class="chip-count">(0건)</span>
           </div>
-          <div class="data-chip" id="chip-vision">
+          <div class="data-chip" id="chip-vision" style="display:none">
             <span class="chip-check" aria-hidden="true">
               <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chip-check-icon" style="display:none"><polyline points="2 6 5 9 10 3"/></svg>
             </span>
@@ -2138,16 +2163,36 @@
                 <span style="font-size:15px;font-weight:700;color:var(--gray-900);letter-spacing:-0.2px;">학습 목표</span>
                 <span id="objectives-count-badge" style="display:none;"></span>
               </div>
-              <p style="margin:4px 0 0;font-size:12px;color:var(--gray-400);line-height:1.5;">학습목표는 과정개요, 전문분야, 전문분야별 과정, 설문결과, 교육제안, 대상조직 데이터 기반으로 AI가 분석한 데이터입니다.</p>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--gray-400);line-height:1.5;">학습목표는 과정개요, 전문분야, 설문결과 데이터 기반으로 AI가 분석한 데이터입니다.</p>
             </div>
-            <button id="obj-add-btn" onclick="openObjectiveModal()" style="
-              display:inline-flex;align-items:center;gap:6px;
-              padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;
-              background:#fff;border:1.5px solid var(--blue-300);color:var(--blue-600);
-              cursor:pointer;white-space:nowrap;transition:background .15s;flex-shrink:0;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              추가
-            </button>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <button id="course-overview-btn" onclick="openCourseOverviewPopup()" style="
+                display:inline-flex;align-items:center;gap:6px;
+                padding:8px 16px;border-radius:var(--radius-md);font-size:13px;font-weight:600;font-family:var(--font);
+                background:#fff;border:1.5px solid var(--gray-300);color:var(--gray-700);
+                cursor:pointer;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:border-color .15s;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                과정 개요
+              </button>
+              <button id="instructor-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 010 7.75"/>
+                </svg>
+                강사 추천
+              </button>
+              <button id="obj-add-btn" onclick="openObjectiveModal()" style="
+                display:inline-flex;align-items:center;gap:6px;
+                padding:8px 16px;border-radius:var(--radius-md);font-size:13px;font-weight:600;font-family:var(--font);
+                background:#fff;border:1.5px solid var(--gray-300);color:var(--gray-700);
+                cursor:pointer;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.06);
+                transition:border-color .15s,box-shadow .15s;flex-shrink:0;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                추가
+              </button>
+            </div>
           </div>
 
           <!-- Objectives output -->
@@ -2179,25 +2224,14 @@
               </div>
               <p style="margin:4px 0 0;font-size:12px;color:var(--gray-400);line-height:1.5;">강사 추천은 과정 학습 목표와 강사 전문 역량을 매칭하여 AI가 추천한 데이터입니다.</p>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-              <button id="inst-add-btn" onclick="openInstructorModal()" style="
-                display:inline-flex;align-items:center;gap:6px;
-                padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;
-                background:#fff;border:1.5px solid var(--blue-300);color:var(--blue-600);
-                cursor:pointer;white-space:nowrap;transition:background .15s;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                추가
-              </button>
-              <button id="instructor-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 010 7.75"/>
-                </svg>
-                강사 추천
-              </button>
-            </div>
+            <button id="inst-add-btn" onclick="openInstructorModal()" style="
+              display:inline-flex;align-items:center;gap:6px;
+              padding:8px 16px;border-radius:var(--radius-md);font-size:13px;font-weight:600;font-family:var(--font);
+              background:#fff;border:1.5px solid var(--gray-300);color:var(--gray-700);
+              cursor:pointer;white-space:nowrap;transition:border-color .15s;flex-shrink:0;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              추가
+            </button>
           </div>
           <div id="instructor-content">
             <div id="instructor-placeholder">
@@ -2266,11 +2300,30 @@
 </div>
 
 
+<!-- ===== 과정 개요 팝업 ===== -->
+<div id="course-overview-overlay" role="dialog" aria-modal="true" aria-labelledby="course-overview-title">
+  <div id="course-overview-popup">
+    <div id="course-overview-header">
+      <span id="course-overview-title" style="font-size:18px;font-weight:700;color:var(--gray-900);letter-spacing:-0.3px;">과정 개요</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="course-overview-print-btn" onclick="window.print()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          인쇄
+        </button>
+        <button style="width:32px;height:32px;border:none;background:var(--gray-100);border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gray-500);transition:background .15s;" onclick="closeCourseOverviewPopup()" aria-label="닫기">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="course-overview-body"></div>
+  </div>
+</div>
+
 <!-- ===== 전문분야 상세 팝업 ===== -->
 <div id="specialty-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="specialty-popup-title">
   <div id="specialty-popup">
     <div id="specialty-popup-header">
-      <span id="specialty-popup-title" style="font-size:16px;font-weight:700;color:var(--gray-900);">전문분야 상세</span>
+      <span id="specialty-popup-title" style="font-size:18px;font-weight:700;color:var(--gray-900);">전문분야 상세</span>
       <button id="specialty-popup-close" aria-label="닫기" onclick="closeSpecialtyPopup()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -2308,7 +2361,7 @@
 /* ============================================================
    CONSTANTS & CONFIG
    ============================================================ */
-const API_KEY = 'YOUR_OPENROUTER_API_KEY';
+const API_KEY = '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';
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /* ── Supabase ── */
@@ -2341,6 +2394,7 @@ const STORAGE_KEYS = {
   proposal: 'education_proposals',
   vision:   'org_visions',
   target:   'education_targets_local',
+  orgReg:   'org_registrations_local',
 };
 
 // 과정개요 단일 레코드 키
@@ -2352,12 +2406,13 @@ const EDU_COURSES_KEY = 'education_courses';
 
 const TAB_LABELS = {
   overview: '과정개요',
-  target:   '교육대상자',
+  target:   '교육대상자/조직',
   job:      '전문분야',
   edu:      '전문분야별 과정',
   survey:   '설문결과',
   proposal: '교육제안',
   vision:   '대상조직',
+  orgReg:   '조직 등록',
 };
 
 /* ============================================================
@@ -2516,6 +2571,20 @@ const MODAL_FORMS = {
         <option value="메일발송">메일발송</option>
         <option value="설문완료">설문완료</option>
       </select>
+    </div>`,
+
+  orgReg: `
+    <div class="field">
+      <label>조직명 <span class="char-counter"><span id="orgreg-name-c">0</span>/100</span></label>
+      <input type="text" id="orgreg-name" maxlength="100" placeholder="예) 인재개발팀" />
+    </div>
+    <div class="field">
+      <label>직무 <span class="char-counter"><span id="orgreg-job-c">0</span>/100</span></label>
+      <input type="text" id="orgreg-job" maxlength="100" placeholder="예) HRD 기획" />
+    </div>
+    <div class="field">
+      <label>전문분야 <span class="char-counter"><span id="orgreg-specialty-c">0</span>/100</span></label>
+      <input type="text" id="orgreg-specialty" maxlength="100" placeholder="예) 교육과정 설계" />
     </div>`,
 };
 
@@ -2766,6 +2835,9 @@ function openModal(tab, editingId, extraData) {
   } else if (tab === 'eduCourse') {
     formKey = 'eduCourse';
     titleLabel = isEdit ? '과정 수정' : '과정 추가';
+  } else if (tab === 'orgReg') {
+    formKey = 'orgReg';
+    titleLabel = isEdit ? '조직 수정' : '조직 등록';
   } else {
     formKey = tab;
     titleLabel = `${TAB_LABELS[tab] || tab} ${isEdit ? '수정' : '추가'}`;
@@ -3217,6 +3289,35 @@ async function saveRecord(tab) {
     renderEduList();
     updateChips();
     updateTabDots();
+    return;
+  }
+
+  // orgReg: 조직 등록
+  if (tab === 'orgReg') {
+    const orgName = (document.getElementById('orgreg-name')?.value || '').trim();
+    if (!orgName) { toast("'조직명' 항목은 필수 입력입니다.", 'error'); return; }
+    const job      = (document.getElementById('orgreg-job')?.value || '').trim();
+    const specialty = (document.getElementById('orgreg-specialty')?.value || '').trim();
+    const records  = loadRecords('orgReg');
+    const editingId = state.modal.editingId;
+    if (editingId) {
+      const idx = records.findIndex(r => r.id === editingId);
+      if (idx !== -1) {
+        records[idx] = { ...records[idx], org_name: orgName, job, specialty, updatedAt: new Date().toISOString() };
+        saveRecords('orgReg', records);
+        await dbUpdate('org_registrations', editingId, { org_name: orgName, job, specialty });
+        toast('조직 정보가 수정되었습니다.', 'success');
+      }
+    } else {
+      const newRec = { id: generateId(), org_name: orgName, job, specialty, created_at: new Date().toISOString() };
+      records.push(newRec);
+      saveRecords('orgReg', records);
+      const uuid = await dbInsert('org_registrations', { org_name: orgName, job, specialty });
+      if (uuid) { newRec.id = uuid; saveRecords('orgReg', records); }
+      toast('조직이 등록되었습니다.', 'success');
+    }
+    closeModal();
+    renderOrgRegList();
     return;
   }
 
@@ -3828,6 +3929,57 @@ function renderTargetList() {
   syncCheckAll();
 }
 
+/* ── 조직 등록 목록 렌더 ── */
+function renderOrgRegList() {
+  const tbody = document.getElementById('orgreg-tbody');
+  const countEl = document.getElementById('orgreg-count-badge');
+  if (!tbody) return;
+  const records = loadRecords('orgReg');
+  if (countEl) countEl.textContent = `${records.length}건`;
+  if (records.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gray-400);font-size:13px;">등록된 조직이 없습니다.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = records.map(r => {
+    const specialtyHtml = r.specialty
+      ? `<span class="target-specialty-link" onclick="showSpecialtyDetail('${escapeHtml(r.specialty)}')" role="button" tabindex="0">${escapeHtml(r.specialty)}</span>`
+      : `<span style="color:var(--gray-400);">-</span>`;
+    return `<tr>
+      <td style="font-weight:600;">${escapeHtml(r.org_name || '-')}</td>
+      <td style="font-size:12px;">${escapeHtml(r.job || '-')}</td>
+      <td>${specialtyHtml}</td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="target-action-btn target-edit-btn" onclick="editOrgReg('${escapeHtml(r.id)}')" aria-label="${escapeHtml(r.org_name)} 수정">수정</button>
+          <button class="target-action-btn target-delete-btn" onclick="deleteOrgReg('${escapeHtml(r.id)}')" aria-label="${escapeHtml(r.org_name)} 삭제">삭제</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function editOrgReg(id) {
+  const records = loadRecords('orgReg');
+  const rec = records.find(r => r.id === id);
+  if (!rec) return;
+  openModal('orgReg', id);
+  setTimeout(() => {
+    const s = (elId, val) => { const el = document.getElementById(elId); if (el) { el.value = val || ''; el.dispatchEvent(new Event('input')); } };
+    s('orgreg-name', rec.org_name);
+    s('orgreg-job', rec.job);
+    s('orgreg-specialty', rec.specialty);
+  }, 30);
+}
+
+async function deleteOrgReg(id) {
+  if (!confirm('조직을 삭제하시겠습니까?')) return;
+  const records = loadRecords('orgReg').filter(r => r.id !== id);
+  saveRecords('orgReg', records);
+  await dbDelete('org_registrations', id);
+  renderOrgRegList();
+  toast('삭제되었습니다.', 'info');
+}
+
 function syncCheckAll() {
   const checkAll = document.getElementById('target-check-all');
   if (!checkAll) return;
@@ -3842,7 +3994,7 @@ function syncCheckAll() {
 /* ── 전문분야 상세 팝업 ── */
 function showSpecialtyDetail(specialtyName) {
   const jobs = loadRecords('job');
-  const job = jobs.find(j => (j.name || '') === specialtyName);
+  const job = jobs.find(j => (j.specialtyName || '') === specialtyName);
 
   const overlay = document.getElementById('specialty-popup-overlay');
   const title = document.getElementById('specialty-popup-title');
@@ -3955,11 +4107,12 @@ async function sendSurveyMail() {
 function renderAllLists() {
   renderOverview();
   Object.keys(STORAGE_KEYS).forEach(tab => {
-    if (tab === 'edu' || tab === 'target') return; // edu/target use their own render
+    if (tab === 'edu' || tab === 'target' || tab === 'orgReg') return;
     renderList(tab);
   });
   renderEduList();
   renderTargetList();
+  renderOrgRegList();
 }
 
 /* ============================================================
@@ -4082,54 +4235,12 @@ function buildPrompt() {
     });
   }
 
-  const eduJobs    = loadEduJobs();
-  const eduCourses = loadEduCourses();
-  if (eduJobs.length > 0) {
-    sections.push('=== 전문분야별 과정 정보 ===');
-    eduJobs.forEach(job => {
-      sections.push(`직무: ${job.job_name}`);
-      const jobCourses = eduCourses.filter(c => c.job_id === job.id);
-      if (jobCourses.length > 0) {
-        const courseNames = jobCourses.map(c => c.course_name).join(' / ');
-        sections.push(`  과정: ${courseNames}`);
-        jobCourses.forEach(c => {
-          if (c.education_goal)  sections.push(`  교육목표(${c.course_name}): ${c.education_goal}`);
-          if (c.target_audience) sections.push(`  교육대상(${c.course_name}): ${c.target_audience}`);
-          if (c.details)         sections.push(`  세부내용(${c.course_name}): ${c.details}`);
-        });
-      }
-    });
-  }
-
   const surveys = loadRecords('survey');
   if (surveys.length > 0) {
     sections.push('=== 설문결과 정보 ===');
     surveys.forEach((r, i) => {
       sections.push(`[설문 ${i + 1}] ${r.name}`);
       if (r.result) sections.push(`응답결과: ${r.result}`);
-    });
-  }
-
-  const proposals = loadRecords('proposal');
-  if (proposals.length > 0) {
-    sections.push('=== 교육제안 정보 ===');
-    proposals.forEach((r, i) => {
-      sections.push(`[교육제안 ${i + 1}] ${r.name}`);
-      if (r.reason)     sections.push(`개설 필요성/배경: ${r.reason}`);
-      if (r.effect)     sections.push(`기대효과 및 목표: ${r.effect}`);
-      if (r.curriculum) sections.push(`주요 커리큘럼: ${r.curriculum}`);
-    });
-  }
-
-  const visions = loadRecords('vision');
-  if (visions.length > 0) {
-    sections.push('=== 대상조직 정보 ===');
-    visions.forEach((r, i) => {
-      sections.push(`[대상조직 ${i + 1}] ${r.name}`);
-      if (r.goal)      sections.push(`조직 목표: ${r.goal}`);
-      if (r.coreJob)   sections.push(`핵심 직무: ${r.coreJob}`);
-      if (r.skill)     sections.push(`역량/스킬: ${r.skill}`);
-      if (r.direction) sections.push(`교육 방향: ${r.direction}`);
     });
   }
 
@@ -4163,7 +4274,7 @@ ${sections.join('\n')}
    AI CALL — Dynamic Model Fetch + Sequential Fallback + Groq
    ============================================================ */
 
-const GROQ_API_KEY = 'YOUR_GROQ_API_KEY';
+const GROQ_API_KEY = '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';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODELS  = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
 
@@ -4393,6 +4504,7 @@ async function saveObjectivesToDB(objectives) {
     const rows = objectives.map((obj, i) => ({
       title:       obj.title.slice(0, 100),
       description: obj.description.slice(0, 200),
+      course:      obj.course || null,
       sort_order:  i + 1,
     }));
     const { data: inserted, error } = await supabaseClient.from('learning_objectives').insert(rows).select('id, sort_order');
@@ -4447,10 +4559,20 @@ function renderObjectives(objectives) {
     countBadge.style.display = 'inline-flex';
   }
 
-  const cards = objectives.map((obj, i) => `
+  const COURSE_OPTIONS = ['', '과정1', '과정2', '과정3', '과정4', '과정5'];
+  const cards = objectives.map((obj, i) => {
+    const courseVal = obj.course || '';
+    const courseOpts = COURSE_OPTIONS.map(c =>
+      `<option value="${c}" ${courseVal === c ? 'selected' : ''}>${c || '과정그룹'}</option>`
+    ).join('');
+    return `
     <div class="objective-card" data-idx="${i}" data-id="${obj.id || ''}"
          style="animation: cardIn .3s ease ${(i * 0.06).toFixed(2)}s both;">
       <div class="obj-number" aria-hidden="true">${i + 1}</div>
+      <select class="obj-course-select${courseVal ? ' assigned' : ''}" aria-label="과정 지정"
+              onchange="updateObjectiveCourse(${i}, this.value); this.className='obj-course-select'+(this.value?' assigned':'');">
+        ${courseOpts}
+      </select>
       <div class="obj-body">
         <div class="obj-title">${escapeHtml(obj.title)}</div>
         <div class="obj-desc">${escapeHtml(obj.description)}</div>
@@ -4459,8 +4581,8 @@ function renderObjectives(objectives) {
         <button class="obj-btn obj-btn-edit" onclick="startEditObjective(${i})">수정</button>
         <button class="obj-btn obj-btn-delete" onclick="deleteObjective(${i})">삭제</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   container.innerHTML = cards;
   // 스크롤을 상단으로 리셋
@@ -4564,6 +4686,27 @@ async function deleteObjective(idx) {
   window._lastObjectives = objectives;
   renderObjectives(objectives);
   toast('학습목표가 삭제되었습니다.', 'info');
+}
+
+/* ── 학습목표 과정 지정 ── */
+async function updateObjectiveCourse(idx, courseValue) {
+  const objectives = window._lastObjectives;
+  if (!objectives || !objectives[idx]) return;
+  objectives[idx].course = courseValue || null;
+  window._lastObjectives = objectives;
+
+  const obj = objectives[idx];
+  if (obj.id) {
+    try {
+      const { error } = await supabaseClient
+        .from('learning_objectives')
+        .update({ course: courseValue || null })
+        .eq('id', obj.id);
+      if (error) throw error;
+    } catch (e) {
+      console.warn('과정 지정 DB 저장 실패:', e);
+    }
+  }
 }
 
 /* ── 학습목표 신규 추가 모달 ── */
@@ -4823,7 +4966,7 @@ async function handleGenerate() {
 
   try {
     const raw        = await callAI(prompt);
-    const objectives = parseObjectives(raw);
+    const objectives = parseObjectives(raw).map(o => ({ ...o, course: '과정1' }));
     await saveObjectivesToDB(objectives);
     renderObjectives(objectives);
     toast(`학습목표 ${objectives.length}개가 생성되었습니다.`, 'success');
@@ -4858,14 +5001,15 @@ async function handleGenerate() {
 /* ============================================================
    INSTRUCTOR — AI PROMPT BUILDER
    ============================================================ */
-function buildInstructorPrompt(objectives) {
+function buildInstructorPrompt(objectives, courseName) {
+  const courseLabel = courseName ? `[${courseName}] ` : '';
   const objList = objectives.map((obj, i) => `${i + 1}. ${obj.title}: ${obj.description}`).join('\n');
-  return `당신은 기업 교육 전문가입니다. 아래 학습목표를 분석하여 적합한 강사를 추천해 주세요.
+  return `당신은 기업 교육 전문가입니다. 아래 ${courseLabel}학습목표를 분석하여 적합한 강사를 추천해 주세요.
 
-[학습목표]
+[${courseLabel}학습목표]
 ${objList}
 
-위 학습목표를 효과적으로 달성할 수 있는 강사를 최대 10명 추천해 주세요.
+위 학습목표를 효과적으로 달성할 수 있는 강사를 최대 5명 추천해 주세요.
 반드시 아래 JSON 배열 형식으로만 응답하세요:
 [
   {
@@ -4895,7 +5039,7 @@ function parseInstructors(content) {
   try {
     const parsed = JSON.parse(jsonStr);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.slice(0, 10);
+      return parsed.slice(0, 5);
     }
   } catch (e) { /* parse failed */ }
 
@@ -4912,6 +5056,7 @@ async function saveInstructorsToDB(instructors) {
       name:         inst.name.slice(0, 50),
       expertise:    inst.expertise.slice(0, 200),
       match_reason: inst.match_reason.slice(0, 200),
+      course:       inst.course || null,
       sort_order:   i + 1,
     }));
     const { data: inserted, error } = await supabaseClient.from('instructor_recommendations').insert(rows).select('id, sort_order');
@@ -4959,26 +5104,45 @@ function renderInstructors(instructors) {
 
   window._lastInstructors = instructors;
 
-  const cards = instructors.map((inst, i) => `
-    <div class="instructor-card" data-idx="${i}" data-id="${inst.id || ''}" style="animation-delay:${(i * 0.06).toFixed(2)}s;">
-      <div class="instructor-number" aria-hidden="true">${i + 1}</div>
-      <div class="instructor-body">
-        <div class="instructor-name">${escapeHtml(inst.name)}</div>
-        <div class="instructor-expertise">
-          <span class="instructor-expertise-label">전문역량: </span>${escapeHtml(inst.expertise)}
-        </div>
-        <div class="instructor-reason">
-          <span class="instructor-reason-label">추천사유: </span>${escapeHtml(inst.match_reason)}
-        </div>
-      </div>
-      <div class="inst-actions">
-        <button class="inst-btn inst-btn-edit" onclick="startEditInstructor(${i})">수정</button>
-        <button class="inst-btn inst-btn-delete" onclick="deleteInstructor(${i})">삭제</button>
-      </div>
-    </div>
-  `).join('');
+  // 과정그룹별 렌더링
+  const COURSE_ORDER = ['과정1','과정2','과정3','과정4','과정5'];
+  const groups = {};
+  instructors.forEach(inst => {
+    const key = inst.course || '미분류';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(inst);
+  });
+  const sortedKeys = Object.keys(groups).sort((a, b) => {
+    const ai = COURSE_ORDER.indexOf(a), bi = COURSE_ORDER.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1; if (bi === -1) return -1;
+    return ai - bi;
+  });
 
-  content.innerHTML = cards;
+  let groupedHtml = '';
+  sortedKeys.forEach(course => {
+    const insts = groups[course];
+    groupedHtml += `<div class="inst-group"><div class="inst-group-title">${escapeHtml(course)}</div>`;
+    insts.forEach(inst => {
+      const gi = instructors.indexOf(inst);
+      groupedHtml += `
+        <div class="instructor-card" data-idx="${gi}" data-id="${inst.id || ''}" style="animation-delay:${(gi * 0.04).toFixed(2)}s;">
+          <div class="instructor-number" aria-hidden="true">${gi + 1}</div>
+          <div class="instructor-body">
+            <div class="instructor-name">${escapeHtml(inst.name)}</div>
+            <div class="instructor-expertise"><span class="instructor-expertise-label">전문역량: </span>${escapeHtml(inst.expertise)}</div>
+            <div class="instructor-reason"><span class="instructor-reason-label">추천사유: </span>${escapeHtml(inst.match_reason)}</div>
+          </div>
+          <div class="inst-actions">
+            <button class="inst-btn inst-btn-edit" onclick="startEditInstructor(${gi})">수정</button>
+            <button class="inst-btn inst-btn-delete" onclick="deleteInstructor(${gi})">삭제</button>
+          </div>
+        </div>`;
+    });
+    groupedHtml += `</div>`;
+  });
+
+  content.innerHTML = groupedHtml;
   content.scrollTop = 0;
 }
 
@@ -4986,59 +5150,63 @@ function renderInstructors(instructors) {
    INSTRUCTOR — GENERATE HANDLER
    ============================================================ */
 async function generateInstructors() {
-  // 1. 현재 학습목표 가져오기
-  const objectives = window._lastObjectives;
-  if (!objectives || objectives.length === 0) {
+  const allObjectives = window._lastObjectives;
+  if (!allObjectives || allObjectives.length === 0) {
     toast('먼저 학습목표를 생성해 주세요.', 'warning');
     return;
   }
+
+  // 과정그룹별로 분류
+  const COURSE_ORDER = ['과정1','과정2','과정3','과정4','과정5'];
+  const groups = {};
+  allObjectives.forEach(o => {
+    const key = o.course || '미분류';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(o);
+  });
+  const sortedCourses = Object.keys(groups).sort((a, b) => {
+    const ai = COURSE_ORDER.indexOf(a), bi = COURSE_ORDER.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1; if (bi === -1) return -1;
+    return ai - bi;
+  });
 
   const btn = document.getElementById('instructor-btn');
   const modelBadge = document.getElementById('instructor-model-badge');
   const content = document.getElementById('instructor-content');
 
-  // 2. 버튼 로딩 상태
   btn.disabled = true;
   btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> 추천 중…`;
-
-  if (modelBadge) {
-    modelBadge.textContent = '요청 중…';
-    modelBadge.className = 'trying';
-  }
-
-  // 로딩 표시
+  if (modelBadge) { modelBadge.textContent = '요청 중…'; modelBadge.className = 'trying'; }
   content.innerHTML = `
     <div class="loading-card" style="min-height:480px;">
       <div class="spinner" role="status" aria-label="로딩 중"></div>
-      <p>AI가 강사를 추천하고 있습니다…</p>
+      <p>과정그룹별로 AI가 강사를 추천하고 있습니다…</p>
     </div>`;
 
   try {
-    // 3. AI 호출
-    const prompt = buildInstructorPrompt(objectives);
-    const raw = await callAI(prompt);
+    const allInstructors = [];
+    for (const courseName of sortedCourses) {
+      const courseObjectives = groups[courseName];
+      const prompt = buildInstructorPrompt(courseObjectives, courseName);
+      const raw = await callAI(prompt);
+      const parsed = parseInstructors(raw).map(inst => ({ ...inst, course: courseName }));
+      allInstructors.push(...parsed);
+    }
 
-    // 4. 파싱
-    const instructors = parseInstructors(raw);
-
-    // 5. 모델 뱃지 업데이트
     if (modelBadge) {
       const modelName = shortModelName(state.currentModel || FREE_MODELS[0]);
       modelBadge.textContent = `사용 모델: ${modelName}`;
       modelBadge.className = '';
     }
 
-    // 6. DB 저장
-    await saveInstructorsToDB(instructors);
-
-    // 7. 렌더
-    renderInstructors(instructors);
-    toast(`강사 ${instructors.length}명이 추천되었습니다.`, 'success');
+    await saveInstructorsToDB(allInstructors);
+    renderInstructors(allInstructors);
+    toast(`총 ${allInstructors.length}명의 강사가 추천되었습니다.`, 'success');
 
   } catch (err) {
     if (modelBadge) { modelBadge.textContent = '연결 실패'; modelBadge.className = ''; }
     toast(err.message, 'error', 6000);
-    // DB에 기존 데이터가 있으면 복원, 없으면 에러 안내 표시
     if (window._lastInstructors && window._lastInstructors.length > 0) {
       renderInstructors(window._lastInstructors);
     } else {
@@ -5060,11 +5228,98 @@ async function generateInstructors() {
 }
 
 /* ============================================================
+   COURSE OVERVIEW POPUP
+   ============================================================ */
+function openCourseOverviewPopup() {
+  const overlay = document.getElementById('course-overview-overlay');
+  const body = document.getElementById('course-overview-body');
+  if (!overlay || !body) return;
+
+  const COURSE_ORDER = ['과정1','과정2','과정3','과정4','과정5'];
+  const objectives = window._lastObjectives || [];
+  const instructors = window._lastInstructors || [];
+
+  // 과정그룹별 분류
+  const groups = {};
+  objectives.forEach(o => {
+    const key = o.course || '미분류';
+    if (!groups[key]) groups[key] = { objectives: [], instructors: [] };
+    groups[key].objectives.push(o);
+  });
+  instructors.forEach(inst => {
+    const key = inst.course || '미분류';
+    if (!groups[key]) groups[key] = { objectives: [], instructors: [] };
+    groups[key].instructors.push(inst);
+  });
+
+  const sortedKeys = Object.keys(groups).sort((a, b) => {
+    const ai = COURSE_ORDER.indexOf(a), bi = COURSE_ORDER.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1; if (bi === -1) return -1;
+    return ai - bi;
+  });
+
+  if (sortedKeys.length === 0) {
+    body.innerHTML = `<div style="padding:40px;text-align:center;color:var(--gray-400);">
+      <p>학습목표를 먼저 생성해 주세요.</p></div>`;
+    overlay.classList.add('open');
+    return;
+  }
+
+  let html = '';
+  sortedKeys.forEach(course => {
+    const g = groups[course];
+    const objItems = g.objectives.map((o, i) => `
+      <div class="co-obj-item">
+        <div class="co-obj-num">${i + 1}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;color:var(--gray-900);margin-bottom:2px;">${escapeHtml(o.title)}</div>
+          <div style="color:var(--gray-500);font-size:12px;">${escapeHtml(o.description || '')}</div>
+        </div>
+      </div>`).join('');
+
+    const instItems = g.instructors.map((inst, i) => `
+      <div class="co-inst-item">
+        <div class="co-inst-num">${i + 1}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;color:var(--gray-900);margin-bottom:2px;">${escapeHtml(inst.name)}</div>
+          <div style="color:var(--gray-500);font-size:12px;margin-bottom:2px;"><span style="font-weight:600;color:var(--gray-600);">전문역량: </span>${escapeHtml(inst.expertise)}</div>
+          <div style="color:var(--gray-500);font-size:12px;"><span style="font-weight:600;color:var(--gray-600);">추천사유: </span>${escapeHtml(inst.match_reason)}</div>
+        </div>
+      </div>`).join('');
+
+    html += `
+      <div class="co-group">
+        <div class="co-group-title">${escapeHtml(course)}</div>
+        ${g.objectives.length > 0 ? `
+          <div class="co-section-label">학습목표</div>
+          ${objItems}` : ''}
+        ${g.instructors.length > 0 ? `
+          <div class="co-section-label" style="margin-top:18px;">강사 추천</div>
+          ${instItems}` : `
+          <div class="co-section-label" style="margin-top:18px;">강사 추천</div>
+          <div style="padding:12px 0;font-size:13px;color:var(--gray-400);">강사 추천 정보가 없습니다. '강사 추천' 버튼을 눌러주세요.</div>`}
+      </div>`;
+  });
+
+  body.innerHTML = html;
+  overlay.classList.add('open');
+}
+
+function closeCourseOverviewPopup() {
+  const overlay = document.getElementById('course-overview-overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+/* ============================================================
    KEYBOARD SHORTCUTS
    ============================================================ */
 function initKeyboardShortcuts() {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      // Close course overview popup if open
+      const coOverlay = document.getElementById('course-overview-overlay');
+      if (coOverlay && coOverlay.classList.contains('open')) { closeCourseOverviewPopup(); return; }
       // Close specialty popup if open
       const spOverlay = document.getElementById('specialty-popup-overlay');
       if (spOverlay && spOverlay.classList.contains('open')) { closeSpecialtyPopup(); return; }
@@ -5293,14 +5548,34 @@ async function loadFromDB() {
     }
   } catch(e) { console.warn('교육대상자 DB 로드 실패:', e); }
 
+  // 조직 등록 (org_registrations)
+  try {
+    const { data: orgs, error: orgErr } = await supabaseClient
+      .from('org_registrations')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    if (!orgErr && orgs && orgs.length > 0) {
+      const records = orgs.map(r => ({
+        id:         r.id,
+        org_name:   r.org_name,
+        job:        r.job,
+        specialty:  r.specialty,
+        sort_order: r.sort_order,
+        created_at: r.created_at,
+      }));
+      saveRecords('orgReg', records);
+      renderOrgRegList();
+    }
+  } catch(e) { console.warn('조직 등록 DB 로드 실패:', e); }
+
   // 학습목표
   try {
     const { data: objectives, error: objErr } = await supabaseClient
       .from('learning_objectives')
-      .select('id, title, description, sort_order')
+      .select('id, title, description, course, sort_order')
       .order('sort_order', { ascending: true });
     if (!objErr && objectives && objectives.length > 0) {
-      const parsed = objectives.map(r => ({ id: r.id, title: r.title, description: r.description }));
+      const parsed = objectives.map(r => ({ id: r.id, title: r.title, description: r.description, course: r.course || null }));
       window._lastObjectives = parsed;
       renderObjectives(parsed);
     }
@@ -5310,10 +5585,14 @@ async function loadFromDB() {
   try {
     const { data: instructors, error: instErr } = await supabaseClient
       .from('instructor_recommendations')
-      .select('id, name, expertise, match_reason, sort_order')
+      .select('id, name, expertise, match_reason, course, sort_order')
       .order('sort_order', { ascending: true });
     if (!instErr && instructors && instructors.length > 0) {
-      renderInstructors(instructors);
+      const mapped = instructors.map(r => ({
+        id: r.id, name: r.name, expertise: r.expertise,
+        match_reason: r.match_reason, course: r.course || null,
+      }));
+      renderInstructors(mapped);
     }
   } catch (e) { console.warn('강사추천 DB 로드 실패:', e); }
 
