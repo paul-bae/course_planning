@@ -1876,6 +1876,97 @@
       scrollbar-color: var(--gray-300) transparent;
     }
 
+    /* ── 설문 집계 대시보드 ── */
+    .sq-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+    }
+    .sq-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .sq-qno {
+      flex-shrink: 0;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--blue-600);
+      color: #fff;
+      font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sq-qtext {
+      font-size: 13px; font-weight: 600;
+      color: var(--gray-900); line-height: 1.5;
+    }
+    .sq-type-badge {
+      margin-left: auto; flex-shrink: 0;
+      font-size: 10px; font-weight: 600;
+      padding: 2px 8px; border-radius: 20px;
+      background: var(--gray-100); color: var(--gray-500);
+    }
+    .sq-bar-row {
+      display: flex; align-items: center;
+      gap: 10px; margin-bottom: 8px;
+    }
+    .sq-bar-label {
+      width: 160px; flex-shrink: 0;
+      font-size: 12px; color: var(--gray-700);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sq-bar-track {
+      flex: 1; height: 20px;
+      background: var(--gray-100);
+      border-radius: 4px; overflow: hidden;
+    }
+    .sq-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--blue-600), var(--blue-400));
+      transition: width .5s ease;
+    }
+    .sq-bar-fill.multi {
+      background: linear-gradient(90deg, #7C3AED, #A78BFA);
+    }
+    .sq-bar-cnt {
+      width: 52px; flex-shrink: 0;
+      font-size: 12px; font-weight: 600;
+      color: var(--gray-600); text-align: right;
+    }
+    .sq-open-list {
+      display: flex; flex-direction: column; gap: 6px;
+      max-height: 180px; overflow-y: auto;
+    }
+    .sq-open-item {
+      font-size: 12px; color: var(--gray-700);
+      padding: 7px 10px;
+      background: var(--gray-50);
+      border-left: 3px solid var(--blue-400);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      line-height: 1.5;
+    }
+    .sq-summary-row {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .sq-summary-chip {
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .sq-summary-chip-val {
+      font-size: 20px; font-weight: 700;
+      color: var(--blue-700);
+    }
+    .sq-summary-chip-lbl {
+      font-size: 11px; color: var(--gray-500);
+    }
+
     /* ── 설문 발송 팝업 ── */
     #survey-modal-overlay {
       display: none;
@@ -2185,6 +2276,7 @@
 
         <!-- ── 설문결과 탭 ── -->
         <div id="tab-survey" class="tab-pane" style="display:none">
+          <!-- 헤더 -->
           <div class="tab-section-header">
             <div class="tab-section-header-left">
               <div class="tab-section-icon" aria-hidden="true">
@@ -2192,19 +2284,31 @@
                   <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
                 </svg>
               </div>
-              <span class="tab-section-title">설문결과 목록</span>
+              <span class="tab-section-title">설문 결과 집계</span>
             </div>
-            <button class="btn-add-record" data-tab="survey" aria-label="설문결과 추가">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              추가
-            </button>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-outline btn-sm" onclick="requestSurveyAI()" id="survey-ai-btn" style="display:none;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                AI 분석 요청
+              </button>
+            </div>
           </div>
-          <div class="record-list">
-            <div class="record-list-header">
-              <span class="record-list-title">저장된 설문결과 목록</span>
-              <span class="record-count-badge" id="survey-count-badge">0건</span>
+
+          <!-- 설문 선택 바 -->
+          <div style="padding:12px 16px;background:var(--gray-50);border-bottom:1px solid var(--color-border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <label style="font-size:13px;font-weight:600;color:var(--gray-700);white-space:nowrap;">설문 선택</label>
+            <select id="survey-select" onchange="onSurveySelect(this.value)"
+              style="flex:1;min-width:220px;max-width:420px;padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font);color:var(--color-text);background:#fff;">
+              <option value="">-- 설문을 선택하세요 --</option>
+            </select>
+            <span id="survey-resp-badge" style="display:none;background:var(--blue-100);color:var(--blue-700);font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;"></span>
+          </div>
+
+          <!-- 집계 결과 영역 -->
+          <div id="survey-aggregate-area" style="padding:16px;display:flex;flex-direction:column;gap:16px;">
+            <div style="text-align:center;padding:40px 0;color:var(--gray-400);font-size:13px;">
+              위에서 설문을 선택하면 문항별 집계 결과가 표시됩니다.
             </div>
-            <div id="survey-list"></div>
           </div>
         </div>
 
@@ -4338,6 +4442,210 @@ function closeSpecialtyPopup() {
   if (overlay) overlay.classList.remove('open');
 }
 
+/* ════════════════════════════════════════════════════════
+   설문 결과 집계 대시보드
+   ════════════════════════════════════════════════════════ */
+
+async function onSurveySelect(surveyId) {
+  const area = document.getElementById('survey-aggregate-area');
+  const badge = document.getElementById('survey-resp-badge');
+  const aiBtn = document.getElementById('survey-ai-btn');
+  if (!surveyId) {
+    area.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--gray-400);font-size:13px;">위에서 설문을 선택하면 문항별 집계 결과가 표시됩니다.</div>';
+    badge.style.display = 'none';
+    aiBtn.style.display = 'none';
+    return;
+  }
+  area.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--gray-400);font-size:13px;">집계 중…</div>';
+
+  try {
+    // 문항 로드
+    const { data: questions, error: qErr } = await supabaseClient
+      .from('survey_questions')
+      .select('*')
+      .eq('survey_id', surveyId)
+      .order('sort_order');
+    if (qErr || !questions || questions.length === 0) {
+      area.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--gray-400);font-size:13px;">등록된 문항이 없습니다.</div>';
+      return;
+    }
+
+    // 응답자 로드
+    const { data: responses, error: rErr } = await supabaseClient
+      .from('survey_responses')
+      .select('id, respondent_name, respondent_job')
+      .eq('survey_id', surveyId);
+    const totalResp = responses ? responses.length : 0;
+
+    // 답변 로드
+    const respIds = (responses || []).map(r => r.id);
+    let answers = [];
+    if (respIds.length > 0) {
+      const { data: ans } = await supabaseClient
+        .from('survey_response_answers')
+        .select('*')
+        .in('response_id', respIds);
+      answers = ans || [];
+    }
+
+    badge.textContent = `총 ${totalResp}명 응답`;
+    badge.style.display = 'inline-block';
+    aiBtn.style.display = 'flex';
+    aiBtn.dataset.surveyId = surveyId;
+
+    renderSurveyAggregate(questions, answers, totalResp);
+  } catch (e) {
+    area.innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--red-600);font-size:13px;">집계 오류: ${e.message}</div>`;
+  }
+}
+
+function renderSurveyAggregate(questions, answers, totalResp) {
+  const area = document.getElementById('survey-aggregate-area');
+  const typeLabel = { single_4: '4지선다', single_5: '5지선다', multi: '다중선택', open: '주관식' };
+
+  // 요약 칩
+  const openCount = questions.filter(q => q.question_type === 'open').length;
+  const choiceCount = questions.length - openCount;
+  let html = `
+    <div class="sq-summary-row">
+      <div class="sq-summary-chip">
+        <span class="sq-summary-chip-val">${totalResp}</span>
+        <span class="sq-summary-chip-lbl">응답자 수</span>
+      </div>
+      <div class="sq-summary-chip">
+        <span class="sq-summary-chip-val">${questions.length}</span>
+        <span class="sq-summary-chip-lbl">총 문항 수</span>
+      </div>
+      <div class="sq-summary-chip">
+        <span class="sq-summary-chip-val">${choiceCount}</span>
+        <span class="sq-summary-chip-lbl">선택형 문항</span>
+      </div>
+      <div class="sq-summary-chip">
+        <span class="sq-summary-chip-val">${openCount}</span>
+        <span class="sq-summary-chip-lbl">주관식 문항</span>
+      </div>
+    </div>`;
+
+  for (const q of questions) {
+    const qAnswers = answers.filter(a => a.question_id === q.id);
+    const tl = typeLabel[q.question_type] || q.question_type;
+
+    html += `
+      <div class="sq-card">
+        <div class="sq-card-header">
+          <div class="sq-qno">${q.question_no}</div>
+          <div class="sq-qtext">${escapeHtml(q.question_text)}</div>
+          <span class="sq-type-badge">${tl}</span>
+        </div>`;
+
+    if (q.question_type === 'open') {
+      html += `<div class="sq-open-list">`;
+      if (qAnswers.length === 0) {
+        html += `<div style="font-size:12px;color:var(--gray-400);padding:8px 0;">응답 없음</div>`;
+      } else {
+        qAnswers.forEach(a => {
+          if (a.text_answer) html += `<div class="sq-open-item">${escapeHtml(a.text_answer)}</div>`;
+        });
+      }
+      html += `</div>`;
+    } else {
+      // 선택형 집계
+      const opts = Array.isArray(q.options) ? q.options : (q.options ? JSON.parse(q.options) : []);
+      const counts = new Array(opts.length).fill(0);
+      qAnswers.forEach(a => {
+        const sel = Array.isArray(a.selected_options) ? a.selected_options : (a.selected_options ? JSON.parse(a.selected_options) : []);
+        sel.forEach(idx => { if (idx >= 0 && idx < counts.length) counts[idx]++; });
+      });
+      const denom = q.question_type === 'multi' ? qAnswers.length || 1 : totalResp || 1;
+      const maxCnt = Math.max(...counts, 1);
+      const isMulti = q.question_type === 'multi';
+
+      opts.forEach((opt, i) => {
+        const pct = Math.round((counts[i] / denom) * 100);
+        const barW = Math.round((counts[i] / maxCnt) * 100);
+        html += `
+          <div class="sq-bar-row">
+            <div class="sq-bar-label" title="${escapeHtml(opt)}">${escapeHtml(opt)}</div>
+            <div class="sq-bar-track">
+              <div class="sq-bar-fill${isMulti ? ' multi' : ''}" style="width:${barW}%"></div>
+            </div>
+            <div class="sq-bar-cnt">${counts[i]}명 (${pct}%)</div>
+          </div>`;
+      });
+    }
+    html += `</div>`;
+  }
+  area.innerHTML = html;
+}
+
+/* ── AI 분석 요청 ── */
+async function requestSurveyAI() {
+  const btn = document.getElementById('survey-ai-btn');
+  const surveyId = btn?.dataset.surveyId;
+  if (!surveyId) return;
+
+  const apiKey = localStorage.getItem('openrouter_api_key');
+  if (!apiKey) { toast('API 키가 설정되지 않았습니다.', 'error'); return; }
+
+  // 집계 데이터 수집
+  const { data: questions } = await supabaseClient.from('survey_questions').select('*').eq('survey_id', surveyId).order('sort_order');
+  const { data: responses } = await supabaseClient.from('survey_responses').select('id').eq('survey_id', surveyId);
+  const respIds = (responses || []).map(r => r.id);
+  let answers = [];
+  if (respIds.length > 0) {
+    const { data: ans } = await supabaseClient.from('survey_response_answers').select('*').in('response_id', respIds);
+    answers = ans || [];
+  }
+
+  // 텍스트 요약 생성
+  let summaryText = `총 ${responses?.length || 0}명 응답\n\n`;
+  for (const q of questions || []) {
+    const qAns = answers.filter(a => a.question_id === q.id);
+    summaryText += `Q${q.question_no}. ${q.question_text} [${q.question_type}]\n`;
+    if (q.question_type === 'open') {
+      qAns.forEach(a => { if (a.text_answer) summaryText += `  - ${a.text_answer}\n`; });
+    } else {
+      const opts = Array.isArray(q.options) ? q.options : JSON.parse(q.options || '[]');
+      const counts = new Array(opts.length).fill(0);
+      qAns.forEach(a => {
+        const sel = Array.isArray(a.selected_options) ? a.selected_options : JSON.parse(a.selected_options || '[]');
+        sel.forEach(i => { if (i >= 0 && i < counts.length) counts[i]++; });
+      });
+      opts.forEach((o, i) => { summaryText += `  ${o}: ${counts[i]}명\n`; });
+    }
+    summaryText += '\n';
+  }
+
+  const prompt = `다음은 교육과정 기획을 위한 설문 집계 결과입니다.\n\n${summaryText}\n\n위 설문 결과를 분석하여:\n1. 교육 대상자 수준 요약\n2. 주요 교육 니즈 및 우선순위\n3. 권장 교육 방향 및 커리큘럼 포인트\n4. 주관식 응답에서 도출된 핵심 키워드\n\n를 구체적으로 제안해 주세요.`;
+
+  const area = document.getElementById('survey-aggregate-area');
+  const existingContent = area.innerHTML;
+  const aiBox = document.createElement('div');
+  aiBox.id = 'survey-ai-result';
+  aiBox.style.cssText = 'background:var(--blue-50);border:1.5px solid var(--blue-200);border-radius:var(--radius-lg);padding:16px;margin-bottom:8px;';
+  aiBox.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--blue-700);margin-bottom:8px;">AI 분석 결과</div><div id="survey-ai-text" style="font-size:13px;color:var(--gray-700);white-space:pre-wrap;line-height:1.7;">분석 중…</div>';
+  area.prepend(aiBox);
+
+  try {
+    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-3.3-70b-instruct:free',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1200,
+      })
+    });
+    const json = await resp.json();
+    const result = json.choices?.[0]?.message?.content || '응답 없음';
+    document.getElementById('survey-ai-text').textContent = result;
+    toast('AI 분석이 완료되었습니다.', 'success');
+  } catch (e) {
+    document.getElementById('survey-ai-text').textContent = `오류: ${e.message}`;
+    toast('AI 분석 요청 실패', 'error');
+  }
+}
+
 /* ── 설문 발송 팝업 ── */
 const SAMPLE_SURVEYS = [
   '2025 직무역량 진단 설문',
@@ -6310,7 +6618,7 @@ async function loadFromDB() {
     }
   } catch (e) { console.warn('전문분야별 과정 DB 로드 실패:', e); }
 
-  // 설문결과 (survey_results)
+  // 설문결과 (survey_results) — 드롭다운 채우기
   try {
     const { data, error } = await supabaseClient
       .from('survey_results')
@@ -6324,7 +6632,17 @@ async function loadFromDB() {
         createdAt: r.created_at,
       }));
       saveRecords('survey', records);
-      renderList('survey');
+      // 집계 탭 드롭다운 채우기
+      const sel = document.getElementById('survey-select');
+      if (sel) {
+        sel.innerHTML = '<option value="">-- 설문을 선택하세요 --</option>';
+        records.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = r.name;
+          sel.appendChild(opt);
+        });
+      }
       updateChips(); updateTabDots();
     }
   } catch (e) { console.warn('설문결과 DB 로드 실패:', e); }
