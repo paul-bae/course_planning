@@ -1575,6 +1575,78 @@
       padding-right: 4px;
     }
 
+    /* Instructor Card — 확정 상태 */
+    .instructor-card.confirmed {
+      border-color: #16A34A;
+      background: #F0FDF4;
+    }
+    .inst-confirm-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #16A34A;
+      background: #DCFCE7;
+      border: 1px solid #86EFAC;
+      border-radius: 20px;
+      padding: 2px 8px;
+      margin-left: 6px;
+      flex-shrink: 0;
+    }
+    .inst-btn-confirm {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-300);
+      color: var(--gray-600);
+    }
+    .inst-btn-confirm:hover {
+      background: #DCFCE7;
+      border-color: #86EFAC;
+      color: #16A34A;
+    }
+    .inst-btn-confirm.confirmed-btn {
+      background: #DCFCE7;
+      border-color: #86EFAC;
+      color: #16A34A;
+      font-weight: 700;
+    }
+    /* 과정개요 — 확정 강사 섹션 */
+    .overview-confirmed-instructors {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--color-border);
+    }
+    .overview-confirmed-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #16A34A;
+      letter-spacing: .3px;
+      margin-bottom: 6px;
+    }
+    .overview-confirmed-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .overview-confirmed-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #15803D;
+      background: #F0FDF4;
+      border: 1px solid #86EFAC;
+      border-radius: 20px;
+      padding: 3px 10px;
+    }
+    .overview-confirmed-course {
+      font-size: 11px;
+      color: var(--gray-400);
+      font-weight: 400;
+    }
+
     /* Instructor Card */
     .instructor-card {
       background: var(--color-surface);
@@ -2716,7 +2788,41 @@ const STORAGE_KEYS = {
 // 과정개요 단일 레코드 키
 const OVERVIEW_KEY = 'course_overview';
 // 과목명 캐시 키 (과목1 → '클라우드 아키텍처 설계 및 보안' 등)
-const SUBJECT_NAMES_KEY = 'course_subject_names';
+const SUBJECT_NAMES_KEY    = 'course_subject_names';
+const CONFIRMED_INST_KEY   = 'confirmed_instructors'; // { "과목1": ["id_or_name", ...] }
+
+function loadConfirmedInstructors() {
+  try { return JSON.parse(localStorage.getItem(CONFIRMED_INST_KEY) || '{}'); } catch { return {}; }
+}
+function saveConfirmedInstructors(data) {
+  localStorage.setItem(CONFIRMED_INST_KEY, JSON.stringify(data));
+}
+function isConfirmed(course, instKey) {
+  const c = loadConfirmedInstructors();
+  return !!(c[course] && c[course].includes(instKey));
+}
+function instKey(inst) {
+  return inst.id || inst.name;
+}
+
+function toggleConfirmInstructor(globalIdx) {
+  const instructors = window._lastInstructors;
+  if (!instructors || !instructors[globalIdx]) return;
+  const inst = instructors[globalIdx];
+  const course = normalizeCourse(inst.course) || '미분류';
+  const key = instKey(inst);
+  const confirmed = loadConfirmedInstructors();
+  if (!confirmed[course]) confirmed[course] = [];
+  const idx = confirmed[course].indexOf(key);
+  if (idx === -1) {
+    confirmed[course].push(key);
+  } else {
+    confirmed[course].splice(idx, 1);
+  }
+  saveConfirmedInstructors(confirmed);
+  renderInstructors(instructors); // 카드 다시 그리기
+  renderOverview();               // 과정개요 확정 강사 갱신
+}
 
 // Education 1:N keys
 const EDU_JOBS_KEY    = 'education_jobs';
@@ -3977,6 +4083,7 @@ function renderOverview() {
         ${renderOverviewField('과정목표', data.education_goal)}
         ${renderOverviewField('교육대상', data.target_audience)}
         ${renderOverviewField('세부내용', data.details)}
+        ${renderOverviewConfirmedInstructors()}
       </div>
       <div class="overview-card-footer">
         등록일: ${formatDate(data.created_at)}
@@ -4023,6 +4130,46 @@ async function updatePlanningStatus(status) {
   updateTabDots();
   const labels = { '임시저장': '임시저장으로', '진행중': '진행중으로', '완료': '완료' };
   toast(`과정 상태가 "${labels[status] || status}" 변경되었습니다.`, 'success');
+}
+
+function renderOverviewConfirmedInstructors() {
+  const confirmed = loadConfirmedInstructors();
+  const instructors = window._lastInstructors || [];
+  if (!instructors.length) return '';
+
+  const COURSE_ORDER = ['과목1','과목2','과목3','과목4','과목5'];
+  const courseKeys = Object.keys(confirmed)
+    .filter(c => confirmed[c] && confirmed[c].length > 0)
+    .sort((a, b) => {
+      const ai = COURSE_ORDER.indexOf(a), bi = COURSE_ORDER.indexOf(b);
+      if (ai === -1 && bi === -1) return a.localeCompare(b);
+      if (ai === -1) return 1; if (bi === -1) return -1;
+      return ai - bi;
+    });
+  if (courseKeys.length === 0) return '';
+
+  let html = `<div class="overview-confirmed-instructors">
+    <div class="overview-confirmed-label">✓ 확정 강사</div>`;
+
+  courseKeys.forEach(course => {
+    const keys = confirmed[course];
+    const names = keys.map(k => {
+      const inst = instructors.find(i => instKey(i) === k);
+      return inst ? inst.name : k;
+    });
+    const subjectLabel = getSubjectLabel(course).replace(/^과목\s*:\s*/, '') || course;
+    html += `<div style="margin-bottom:4px;">
+      <span class="overview-confirmed-course">${escapeHtml(course)} ${escapeHtml(subjectLabel)}</span>
+      <div class="overview-confirmed-group">
+        ${names.map(n => `<span class="overview-confirmed-chip">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          ${escapeHtml(n)}
+        </span>`).join('')}
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+  return html;
 }
 
 function renderOverviewField(label, value) {
@@ -4823,10 +4970,10 @@ function escapeHtml(str) {
 /* ============================================================
    AI PROMPT BUILDER
    ============================================================ */
-function buildPrompt() {
+async function buildPrompt() {
   const sections = [];
 
-  // 과정개요를 첫 번째 컨텍스트로 포함
+  // 과정개요
   const overview = loadOverview();
   if (overview) {
     sections.push('[과정개요]');
@@ -4836,6 +4983,7 @@ function buildPrompt() {
     if (overview.details)         sections.push(`세부내용: ${overview.details}`);
   }
 
+  // 전문분야
   const jobs = loadRecords('job');
   if (jobs.length > 0) {
     sections.push('=== 전문분야 정보 ===');
@@ -4843,21 +4991,31 @@ function buildPrompt() {
       sections.push(`[전문분야 ${i + 1}] ${r.name}`);
       if (r.specialtyName) sections.push(`전문분야명: ${r.specialtyName}`);
       if (r.definition)    sections.push(`전문분야 정의: ${r.definition}`);
-      if (r.mainWork)    sections.push(`주요업무: ${r.mainWork}`);
-      if (r.detail)      sections.push(`업무내용: ${r.detail}`);
-      if (r.knowledge)   sections.push(`전문지식: ${r.knowledge}`);
-      if (r.skill)       sections.push(`Skill/Tool: ${r.skill}`);
-      if (r.experience)  sections.push(`업무경험: ${r.experience}`);
+      if (r.mainWork)      sections.push(`주요업무: ${r.mainWork}`);
+      if (r.detail)        sections.push(`업무내용: ${r.detail}`);
+      if (r.knowledge)     sections.push(`전문지식: ${r.knowledge}`);
+      if (r.skill)         sections.push(`Skill/Tool: ${r.skill}`);
+      if (r.experience)    sections.push(`업무경험: ${r.experience}`);
     });
   }
 
+  // 설문결과 — 구조화 집계 데이터 우선, 없으면 텍스트 폴백
   const surveys = loadRecords('survey');
   if (surveys.length > 0) {
-    sections.push('=== 설문결과 정보 ===');
-    surveys.forEach((r, i) => {
-      sections.push(`[설문 ${i + 1}] ${r.name}`);
-      if (r.result) sections.push(`응답결과: ${r.result}`);
-    });
+    sections.push('=== 설문결과 집계 ===');
+    for (let i = 0; i < surveys.length; i++) {
+      const s = surveys[i];
+      sections.push(`[설문 ${i + 1}] ${s.name}`);
+
+      // 구조화 집계 시도
+      const aggregated = await buildSurveyAggregateSummary(s.id);
+      if (aggregated) {
+        sections.push(aggregated);
+      } else if (s.result) {
+        // 구조화 데이터 없으면 기존 텍스트 폴백
+        sections.push(`응답결과: ${s.result}`);
+      }
+    }
   }
 
   if (sections.length === 0) return null;
@@ -4883,7 +5041,66 @@ ${sections.join('\n')}
 - 제목: 10~30자 내외의 한국어 명사형 문장
 - 설명: 40~80자 내외의 한국어 평서문 (학습 후 할 수 있는 것을 서술)
 - 직무 현장성과 실무 적용 가능성을 최우선으로 고려
+- 설문 집계 결과의 상위 선택 항목과 주관식 니즈를 학습목표에 반드시 반영
 - JSON 외 다른 텍스트는 절대 포함하지 말 것`;
+}
+
+/* 설문 집계 텍스트 요약 생성 (프롬프트 삽입용) */
+async function buildSurveyAggregateSummary(surveyId) {
+  try {
+    const { data: questions, error: qErr } = await supabaseClient
+      .from('survey_questions').select('*')
+      .eq('survey_id', surveyId).order('sort_order');
+    if (qErr || !questions || questions.length === 0) return null;
+
+    const { data: responses } = await supabaseClient
+      .from('survey_responses').select('id')
+      .eq('survey_id', surveyId);
+    const respIds = (responses || []).map(r => r.id);
+    if (respIds.length === 0) return null;
+
+    const { data: answers } = await supabaseClient
+      .from('survey_response_answers').select('*')
+      .in('response_id', respIds);
+    const allAnswers = answers || [];
+
+    const totalResp = respIds.length;
+    const lines = [`  응답자 수: ${totalResp}명`];
+
+    for (const q of questions) {
+      const qAns = allAnswers.filter(a => a.question_id === q.id);
+      lines.push(`  Q${q.question_no}. ${q.question_text}`);
+
+      if (q.question_type === 'open') {
+        const texts = qAns.map(a => a.text_answer).filter(Boolean);
+        if (texts.length > 0) {
+          lines.push(`    [주관식 응답 ${texts.length}건]`);
+          texts.slice(0, 5).forEach(t => lines.push(`    - ${t}`));
+          if (texts.length > 5) lines.push(`    - 외 ${texts.length - 5}건`);
+        }
+      } else {
+        const opts = Array.isArray(q.options) ? q.options : JSON.parse(q.options || '[]');
+        const counts = new Array(opts.length).fill(0);
+        qAns.forEach(a => {
+          const sel = Array.isArray(a.selected_options)
+            ? a.selected_options : JSON.parse(a.selected_options || '[]');
+          sel.forEach(idx => { if (idx >= 0 && idx < counts.length) counts[idx]++; });
+        });
+        const denom = q.question_type === 'multi' ? qAns.length || 1 : totalResp;
+        // 높은 비율 순 정렬 후 상위 항목만 표시
+        const ranked = opts
+          .map((o, i) => ({ label: o, count: counts[i], pct: Math.round(counts[i] / denom * 100) }))
+          .sort((a, b) => b.count - a.count);
+        ranked.forEach(r => {
+          if (r.count > 0) lines.push(`    ${r.label}: ${r.count}명 (${r.pct}%)`);
+        });
+      }
+    }
+    return lines.join('\n');
+  } catch (e) {
+    console.warn('설문 집계 요약 실패:', e);
+    return null;
+  }
 }
 
 /* ============================================================
@@ -5569,7 +5786,7 @@ function showProgressBar(active) {
 async function handleGenerate() {
   if (state.generating) return;
 
-  const prompt = buildPrompt();
+  const prompt = await buildPrompt();
   if (!prompt) {
     toast('학습목표를 생성하려면 좌측에 데이터를 1건 이상 입력하고 저장해 주세요.', 'warning');
     return;
@@ -5763,17 +5980,25 @@ function renderInstructors(instructors) {
             강사 추가
           </button>
         </div>`;
+    const confirmedMap = loadConfirmedInstructors();
     insts.forEach((inst, localIdx) => {
       const gi = instructors.indexOf(inst);
+      const confirmed = !!(confirmedMap[course] && confirmedMap[course].includes(instKey(inst)));
+      const confirmCls = confirmed ? ' confirmed' : '';
+      const confirmBtnCls = confirmed ? ' confirmed-btn' : '';
+      const confirmBadge = confirmed
+        ? `<span class="inst-confirm-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 확정</span>`
+        : '';
       groupedHtml += `
-        <div class="instructor-card" data-idx="${gi}" data-id="${inst.id || ''}" style="animation-delay:${(localIdx * 0.04).toFixed(2)}s;">
+        <div class="instructor-card${confirmCls}" data-idx="${gi}" data-id="${inst.id || ''}" style="animation-delay:${(localIdx * 0.04).toFixed(2)}s;">
           <div class="instructor-number" aria-hidden="true">${localIdx + 1}</div>
           <div class="instructor-body">
-            <div class="instructor-name">${escapeHtml(inst.name)}</div>
+            <div class="instructor-name">${escapeHtml(inst.name)}${confirmBadge}</div>
             <div class="instructor-expertise"><span class="instructor-expertise-label">전문역량: </span>${escapeHtml(inst.expertise)}</div>
             <div class="instructor-reason"><span class="instructor-reason-label">추천사유: </span>${escapeHtml(inst.match_reason)}</div>
           </div>
           <div class="inst-actions">
+            <button class="inst-btn inst-btn-confirm${confirmBtnCls}" onclick="toggleConfirmInstructor(${gi})">${confirmed ? '✓ 확정됨' : '확정'}</button>
             <button class="inst-btn inst-btn-edit" onclick="startEditInstructor(${gi})">수정</button>
             <button class="inst-btn inst-btn-delete" onclick="deleteInstructor(${gi})">삭제</button>
           </div>
@@ -6058,21 +6283,47 @@ function renderCourseOverviewHtml(ov, groups, sortedKeys) {
           </div>`).join('')
       : `<span class="co-row-empty">—</span>`;
 
+    const confirmedMapPopup = loadConfirmedInstructors();
+    const confirmedKeysForCourse = confirmedMapPopup[course] || [];
+
     const instItems = g.instructors.length > 0
-      ? g.instructors.map((inst, i) => `
-          <div class="co-inst-item">
-            <div class="co-inst-num">${i + 1}</div>
+      ? g.instructors.map((inst, i) => {
+          const isConfirmed = confirmedKeysForCourse.includes(instKey(inst));
+          const confirmedBadge = isConfirmed
+            ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#16A34A;background:#DCFCE7;border:1px solid #86EFAC;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:middle;">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>확정
+               </span>`
+            : '';
+          const cardStyle = isConfirmed
+            ? 'border-left:3px solid #16A34A;background:#F0FDF4;padding-left:10px;'
+            : 'border-left:3px solid transparent;padding-left:10px;';
+          return `
+          <div class="co-inst-item" style="${cardStyle}margin-bottom:10px;padding-top:6px;padding-bottom:6px;border-radius:6px;">
+            <div class="co-inst-num" style="${isConfirmed ? 'background:#16A34A;' : ''}">${i + 1}</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-weight:700;color:var(--gray-900);margin-bottom:3px;">${escapeHtml(inst.name)}</div>
+              <div style="font-weight:700;color:var(--gray-900);margin-bottom:3px;">${escapeHtml(inst.name)}${confirmedBadge}</div>
               <div style="font-size:12px;color:var(--gray-600);margin-bottom:2px;line-height:1.5;"><span style="font-weight:600;color:var(--blue-600);">전문역량</span>&ensp;${escapeHtml(inst.expertise)}</div>
               <div style="font-size:12px;color:var(--gray-600);line-height:1.5;"><span style="font-weight:600;color:var(--blue-600);">추천사유</span>&ensp;${escapeHtml(inst.match_reason)}</div>
             </div>
-          </div>`).join('')
+          </div>`;
+        }).join('')
       : `<span class="co-row-empty">—</span>`;
+
+    // 확정 강사 요약 (섹션 하단)
+    const confirmedNamesForPopup = confirmedKeysForCourse.map(k => {
+      const inst = g.instructors.find(i => instKey(i) === k);
+      return inst ? inst.name : k;
+    }).filter(Boolean);
+    const confirmedSummary = confirmedNamesForPopup.length > 0
+      ? `<div style="margin-top:8px;padding:8px 12px;background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+           <span style="font-size:11px;font-weight:700;color:#16A34A;white-space:nowrap;">✓ 확정 강사</span>
+           ${confirmedNamesForPopup.map(n => `<span style="font-size:12px;font-weight:600;color:#15803D;background:#DCFCE7;border:1px solid #86EFAC;border-radius:20px;padding:2px 9px;">${escapeHtml(n)}</span>`).join('')}
+         </div>`
+      : '';
 
     const courseContent = `
       <div style="margin-bottom:14px;">${subLabel('학습목표')}${objItems}</div>
-      <div>${subLabel('강사추천')}${instItems}</div>`;
+      <div>${subLabel('강사추천')}${instItems}${confirmedSummary}</div>`;
 
     rows_html += row(escapeHtml(getSubjectLabel(course)), courseContent, 'color:var(--blue-700,#1D4ED8);font-weight:700;');
   });
@@ -6335,13 +6586,26 @@ function downloadSubjectExcel() {
       'Knox ID(사내)/강사명(사외)','시간당 강사료(사내)','강의 시간','총 강사료(사외)'],
   ];
 
+  const confirmedMap = loadConfirmedInstructors();
+  const allInstructors = window._lastInstructors || [];
+
   sortedKeys.forEach(course => {
     const g = groups[course];
     const subjectName = getSubjectLabel(course).replace(/^과목\s*:\s*/, '');
     const objText = g.objectives.length > 0
       ? g.objectives.map((o, i) => `${circled[i] || (i + 1) + '.'} ${o.title}`).join('\n')
       : '';
-    wsData.push(['', '', subjectName, objText, '', '', '', '', '']);
+
+    // 확정 강사 이름 목록 (줄바꿈 구분)
+    const confirmedKeys = confirmedMap[course] || [];
+    const confirmedNames = confirmedKeys.map(k => {
+      const inst = allInstructors.find(i => instKey(i) === k);
+      return inst ? inst.name : k;
+    });
+    const instructorTypeCell  = confirmedNames.length > 0 ? '사내 강사' : '';
+    const instructorNamesCell = confirmedNames.join('\n');
+
+    wsData.push(['', '', subjectName, objText, instructorTypeCell, instructorNamesCell, '', '', '']);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -6407,18 +6671,24 @@ function downloadSubjectExcel() {
     });
   });
 
-  // ─── Row 7+: 데이터 스타일 (세로 가운데 + 테두리 + D열 줄바꿈) ──
-  sortedKeys.forEach((_, i) => {
+  // ─── Row 7+: 데이터 스타일 (세로 가운데 + 테두리 + D·F열 줄바꿈) ──
+  sortedKeys.forEach((course, i) => {
     const rowNum = 7 + i;
     COLS.forEach(col => {
       setStyle(`${col}${rowNum}`, {
         alignment: {
           vertical: 'center',
-          wrapText: col === 'D',
+          wrapText: col === 'D' || col === 'F',
         },
         border: allBorders,
       });
     });
+    // 확정 강사가 여러 명이면 행 높이 조정
+    const confirmedCnt = (confirmedMap[course] || []).length;
+    if (confirmedCnt > 1) {
+      const existH = ws['!rows'][rowNum - 1]?.hpt || 28;
+      ws['!rows'][rowNum - 1] = { hpt: Math.max(existH, confirmedCnt * 18) };
+    }
   });
 
   // ─── 파일 저장 ─────────────────────────────────────────────
