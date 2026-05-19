@@ -1948,6 +1948,74 @@
       scrollbar-color: var(--gray-300) transparent;
     }
 
+    /* ── 설문 서브탭 ── */
+    .survey-subtab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--color-border);
+      background: var(--gray-50);
+      padding: 0 16px;
+    }
+    .survey-subtab {
+      padding: 10px 20px;
+      font-size: 13px; font-weight: 500;
+      color: var(--gray-500);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color .2s, border-color .2s;
+      white-space: nowrap;
+    }
+    .survey-subtab.active {
+      color: var(--blue-600);
+      font-weight: 700;
+      border-bottom-color: var(--blue-600);
+    }
+    .survey-subpane { display: none; }
+    .survey-subpane.active { display: block; }
+
+    /* ── 외부 설문 카드 ── */
+    .ext-survey-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 6px;
+      transition: box-shadow .15s;
+    }
+    .ext-survey-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+    .ext-survey-card-title {
+      font-size: 14px; font-weight: 700; color: var(--gray-900);
+    }
+    .ext-survey-card-meta {
+      font-size: 12px; color: var(--gray-500);
+      display: flex; gap: 10px; align-items: center;
+    }
+    .ext-survey-card-preview {
+      font-size: 12px; color: var(--gray-600);
+      line-height: 1.6;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+      white-space: pre-wrap;
+    }
+    .ext-survey-card-actions {
+      display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px;
+    }
+    .ext-survey-empty {
+      text-align: center; padding: 48px 0;
+      color: var(--gray-400); font-size: 13px;
+    }
+
+    /* ── 외부 설문 모달 ── */
+    #ext-survey-modal .modal-body { display: flex; flex-direction: column; gap: 14px; }
+    .ext-modal-row { display: flex; gap: 12px; }
+    .ext-modal-row > * { flex: 1; }
+    .ext-modal-label {
+      font-size: 12px; font-weight: 600; color: var(--gray-700);
+      margin-bottom: 4px;
+    }
+    .ext-modal-label .req { color: var(--red-500, #EF4444); margin-left: 2px; }
+
     /* ── 설문 집계 대시보드 ── */
     .sq-card {
       background: var(--color-surface);
@@ -2166,7 +2234,7 @@
           <span class="tab-dot" aria-hidden="true"></span>전문분야별 과정
         </button>
         <button class="tab-btn" data-tab="survey"   role="tab" aria-selected="false">
-          <span class="tab-dot" aria-hidden="true"></span>설문결과
+          <span class="tab-dot" aria-hidden="true"></span>설문결과 / 기타자료
         </button>
         <button class="tab-btn" data-tab="proposal" role="tab" aria-selected="false" style="display:none">
           <span class="tab-dot" aria-hidden="true"></span>교육제안
@@ -2346,9 +2414,9 @@
           </div>
         </div>
 
-        <!-- ── 설문결과 탭 ── -->
+        <!-- ── 설문결과 / 기타자료 탭 ── -->
         <div id="tab-survey" class="tab-pane" style="display:none">
-          <!-- 헤더 -->
+          <!-- 공통 헤더 -->
           <div class="tab-section-header">
             <div class="tab-section-header-left">
               <div class="tab-section-icon" aria-hidden="true">
@@ -2356,8 +2424,9 @@
                   <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
                 </svg>
               </div>
-              <span class="tab-section-title">설문 결과 집계</span>
+              <span class="tab-section-title">설문 결과 및 기타 자료</span>
             </div>
+            <!-- AI 분석 버튼 (설문 결과 탭에서만 표시) -->
             <div style="display:flex;gap:8px;align-items:center;">
               <button class="btn btn-outline btn-sm" onclick="requestSurveyAI()" id="survey-ai-btn" style="display:none;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
@@ -2366,20 +2435,46 @@
             </div>
           </div>
 
-          <!-- 설문 선택 바 -->
-          <div style="padding:12px 16px;background:var(--gray-50);border-bottom:1px solid var(--color-border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <label style="font-size:13px;font-weight:600;color:var(--gray-700);white-space:nowrap;">설문 선택</label>
-            <select id="survey-select" onchange="onSurveySelect(this.value)"
-              style="flex:1;min-width:220px;max-width:420px;padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font);color:var(--color-text);background:#fff;">
-              <option value="">-- 설문을 선택하세요 --</option>
-            </select>
-            <span id="survey-resp-badge" style="display:none;background:var(--blue-100);color:var(--blue-700);font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;"></span>
+          <!-- 서브탭 바 -->
+          <div class="survey-subtab-bar">
+            <div class="survey-subtab active" id="stab-run" onclick="switchSurveySubtab('run')">설문 결과</div>
+            <div class="survey-subtab"        id="stab-ext" onclick="switchSurveySubtab('ext')">기타 자료</div>
           </div>
 
-          <!-- 집계 결과 영역 -->
-          <div id="survey-aggregate-area" style="padding:16px;display:flex;flex-direction:column;gap:16px;">
-            <div style="text-align:center;padding:40px 0;color:var(--gray-400);font-size:13px;">
-              위에서 설문을 선택하면 문항별 집계 결과가 표시됩니다.
+          <!-- ① 서브탭: 설문 결과 (기존 Supabase 집계) -->
+          <div class="survey-subpane active" id="spane-run">
+            <!-- 설문 선택 바 -->
+            <div style="padding:12px 16px;background:var(--gray-50);border-bottom:1px solid var(--color-border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <label style="font-size:13px;font-weight:600;color:var(--gray-700);white-space:nowrap;">설문 선택</label>
+              <select id="survey-select" onchange="onSurveySelect(this.value)"
+                style="flex:1;min-width:220px;max-width:420px;padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font);color:var(--color-text);background:#fff;">
+                <option value="">-- 설문을 선택하세요 --</option>
+              </select>
+              <span id="survey-resp-badge" style="display:none;background:var(--blue-100);color:var(--blue-700);font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;"></span>
+            </div>
+            <!-- 집계 결과 영역 -->
+            <div id="survey-aggregate-area" style="padding:16px;display:flex;flex-direction:column;gap:16px;">
+              <div style="text-align:center;padding:40px 0;color:var(--gray-400);font-size:13px;">
+                위에서 설문을 선택하면 문항별 집계 결과가 표시됩니다.
+              </div>
+            </div>
+          </div>
+
+          <!-- ② 서브탭: 기타 자료 -->
+          <div class="survey-subpane" id="spane-ext">
+            <!-- 헤더 바 -->
+            <div style="padding:12px 16px;background:var(--gray-50);border-bottom:1px solid var(--color-border);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div style="font-size:13px;color:var(--gray-600);">
+                참고 자료, 인터뷰 결과, 외부 설문 등 기타 자료를 등록합니다. 등록된 자료는 AI 학습목표 생성에 활용됩니다.
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openExtSurveyModal(null)" style="flex-shrink:0;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                자료 등록
+              </button>
+            </div>
+            <!-- 테이블 목록 -->
+            <div id="ext-survey-list" style="padding:16px;">
+              <!-- JS로 렌더링 -->
             </div>
           </div>
         </div>
@@ -2631,6 +2726,50 @@
     <div id="confirm-actions">
       <button class="btn btn-ghost" id="confirm-cancel">취소</button>
       <button class="btn btn-danger-ghost" id="confirm-ok">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 기타 자료 등록 모달 ===== -->
+<div id="ext-survey-modal-overlay" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.45);align-items:center;justify-content:center;" onclick="closeExtSurveyModal(event)">
+  <div id="ext-survey-modal" style="background:#fff;border-radius:12px;width:580px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.18);" onclick="event.stopPropagation()">
+    <!-- 모달 헤더 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--color-border);">
+      <span id="ext-modal-title" style="font-size:15px;font-weight:700;color:var(--gray-900);">기타 자료 등록</span>
+      <button onclick="closeExtSurveyModal()" style="background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:20px;line-height:1;padding:2px 6px;">&times;</button>
+    </div>
+    <!-- 모달 본문 -->
+    <div class="modal-body" style="padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;">
+      <input type="hidden" id="ext-modal-id" value="" />
+
+      <!-- 자료명 -->
+      <div>
+        <div class="ext-modal-label">자료명 <span class="req">*</span></div>
+        <input id="ext-modal-title-input" type="text" class="form-input"
+          placeholder="예) 2025 상반기 직무역량 교육 수요 조사"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font);outline:none;" />
+      </div>
+
+      <!-- 출처 -->
+      <div>
+        <div class="ext-modal-label">출처</div>
+        <input id="ext-modal-source" type="text" class="form-input"
+          placeholder="예) 인사팀 설문, 외부 리서치, 인터뷰 등"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font);outline:none;" />
+      </div>
+
+      <!-- 내용 -->
+      <div>
+        <div class="ext-modal-label">내용 <span class="req">*</span></div>
+        <textarea id="ext-modal-content" rows="10" class="form-input"
+          placeholder="자료 내용을 자유롭게 입력하세요.&#10;&#10;예)&#10;• 교육 필요도: 매우 필요 72%, 필요 20%, 보통 8%&#10;• 선호 교육 방식: 실습 중심 61%, 이론+실습 혼합 32%&#10;• 주요 니즈: 실무 적용 가능한 심화 과정 필요&#10;• 자유 의견: 현업 사례 중심의 강의 요청 다수"
+          style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:var(--radius-md);font-size:13px;font-family:var(--font);outline:none;resize:vertical;line-height:1.7;"></textarea>
+      </div>
+    </div>
+    <!-- 모달 푸터 -->
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--color-border);">
+      <button class="btn btn-outline btn-sm" onclick="closeExtSurveyModal()">취소</button>
+      <button class="btn btn-primary btn-sm" onclick="saveExtSurvey()">저장</button>
     </div>
   </div>
 </div>
@@ -4968,6 +5107,136 @@ function escapeHtml(str) {
 }
 
 /* ============================================================
+   외부 설문 등록 (External Survey)
+   ============================================================ */
+const EXT_SURVEY_KEY = 'external_surveys';
+
+function loadExternalSurveys() {
+  try { return JSON.parse(localStorage.getItem(EXT_SURVEY_KEY) || '[]'); } catch { return []; }
+}
+function saveExternalSurveys(list) {
+  localStorage.setItem(EXT_SURVEY_KEY, JSON.stringify(list));
+}
+
+/* 서브탭 전환 */
+function switchSurveySubtab(tab) {
+  ['run', 'ext'].forEach(t => {
+    document.getElementById('stab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('spane-' + t).classList.toggle('active', t === tab);
+  });
+  const aiBtn = document.getElementById('survey-ai-btn');
+  if (aiBtn) aiBtn.style.display = (tab === 'run') ? '' : 'none';
+  if (tab === 'ext') renderExtSurveyList();
+}
+
+/* 테이블 목록 렌더링 */
+function renderExtSurveyList() {
+  const list = loadExternalSurveys();
+  const el = document.getElementById('ext-survey-list');
+  if (!el) return;
+  if (list.length === 0) {
+    el.innerHTML = `<div class="ext-survey-empty">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="1.5" style="margin:0 auto 10px;display:block;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      등록된 기타 자료가 없습니다.<br>
+      <span style="font-size:12px;color:var(--gray-300);">[자료 등록] 버튼으로 자료를 추가하세요.</span>
+    </div>`;
+    return;
+  }
+  const rows = list.map(s => {
+    const preview = (s.content || '').replace(/\n/g, ' ').slice(0, 80);
+    return `<tr style="border-bottom:1px solid var(--color-border);">
+      <td style="padding:10px 12px;font-size:13px;font-weight:600;color:var(--gray-900);vertical-align:top;min-width:140px;">${escapeHtml(s.title)}</td>
+      <td style="padding:10px 12px;font-size:12px;color:var(--gray-600);vertical-align:top;min-width:100px;">${escapeHtml(s.source || '—')}</td>
+      <td style="padding:10px 12px;font-size:12px;color:var(--gray-700);vertical-align:top;line-height:1.6;white-space:pre-wrap;">${escapeHtml(preview)}${s.content && s.content.length > 80 ? '…' : ''}</td>
+      <td style="padding:10px 12px;vertical-align:top;white-space:nowrap;min-width:96px;">
+        <button class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:12px;" onclick="openExtSurveyModal('${s.id}')">수정</button>
+        <button class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:12px;color:var(--red-600,#DC2626);border-color:var(--red-200,#FECACA);margin-left:4px;" onclick="deleteExtSurvey('${s.id}')">삭제</button>
+      </td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-family:var(--font);">
+    <thead>
+      <tr style="background:var(--gray-50);border-bottom:2px solid var(--color-border);">
+        <th style="padding:9px 12px;font-size:12px;font-weight:700;color:var(--gray-600);text-align:left;">자료명</th>
+        <th style="padding:9px 12px;font-size:12px;font-weight:700;color:var(--gray-600);text-align:left;">출처</th>
+        <th style="padding:9px 12px;font-size:12px;font-weight:700;color:var(--gray-600);text-align:left;">내용</th>
+        <th style="padding:9px 12px;font-size:12px;font-weight:700;color:var(--gray-600);text-align:left;">관리</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+/* 모달 열기 (id=null → 신규, id=string → 수정) */
+function openExtSurveyModal(id) {
+  const overlay = document.getElementById('ext-survey-modal-overlay');
+  document.getElementById('ext-modal-id').value = id || '';
+  document.getElementById('ext-modal-title-input').value = '';
+  document.getElementById('ext-modal-source').value = '';
+  document.getElementById('ext-modal-content').value = '';
+  document.getElementById('ext-modal-title').textContent = id ? '기타 자료 수정' : '기타 자료 등록';
+
+  if (id) {
+    const found = loadExternalSurveys().find(s => s.id === id);
+    if (found) {
+      document.getElementById('ext-modal-title-input').value = found.title || '';
+      document.getElementById('ext-modal-source').value      = found.source || '';
+      document.getElementById('ext-modal-content').value     = found.content || '';
+    }
+  }
+  overlay.style.display = 'flex';
+  document.getElementById('ext-modal-title-input').focus();
+}
+
+/* 모달 닫기 */
+function closeExtSurveyModal(event) {
+  if (event && event.target !== document.getElementById('ext-survey-modal-overlay')) return;
+  document.getElementById('ext-survey-modal-overlay').style.display = 'none';
+}
+
+/* 저장 */
+function saveExtSurvey() {
+  const title   = document.getElementById('ext-modal-title-input').value.trim();
+  const source  = document.getElementById('ext-modal-source').value.trim();
+  const content = document.getElementById('ext-modal-content').value.trim();
+
+  if (!title)   { showToast('자료명을 입력하세요.', 'warn'); return; }
+  if (!content) { showToast('내용을 입력하세요.', 'warn'); return; }
+
+  const list = loadExternalSurveys();
+  const existingId = document.getElementById('ext-modal-id').value;
+
+  if (existingId) {
+    const idx = list.findIndex(s => s.id === existingId);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], title, source, content };
+    }
+  } else {
+    list.push({
+      id: 'ext_' + Date.now(),
+      title,
+      source,
+      content,
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  saveExternalSurveys(list);
+  document.getElementById('ext-survey-modal-overlay').style.display = 'none';
+  renderExtSurveyList();
+  showToast(existingId ? '자료가 수정되었습니다.' : '자료가 등록되었습니다.', 'success');
+}
+
+/* 삭제 */
+function deleteExtSurvey(id) {
+  if (!confirm('이 설문 결과를 삭제하시겠습니까?')) return;
+  const list = loadExternalSurveys().filter(s => s.id !== id);
+  saveExternalSurveys(list);
+  renderExtSurveyList();
+  showToast('삭제되었습니다.', 'success');
+}
+
+/* ============================================================
    AI PROMPT BUILDER
    ============================================================ */
 async function buildPrompt() {
@@ -5016,6 +5285,17 @@ async function buildPrompt() {
         sections.push(`응답결과: ${s.result}`);
       }
     }
+  }
+
+  // 기타 자료 포함
+  const extSurveys = loadExternalSurveys();
+  if (extSurveys.length > 0) {
+    sections.push('=== 기타 자료 ===');
+    extSurveys.forEach((s, i) => {
+      const meta = s.source ? ` (출처: ${s.source})` : '';
+      sections.push(`[자료 ${i + 1}] ${s.title}${meta}`);
+      sections.push(s.content);
+    });
   }
 
   if (sections.length === 0) return null;
@@ -6302,8 +6582,8 @@ function renderCourseOverviewHtml(ov, groups, sortedKeys) {
             <div class="co-inst-num" style="${isConfirmed ? 'background:#16A34A;' : ''}">${i + 1}</div>
             <div style="flex:1;min-width:0;">
               <div style="font-weight:700;color:var(--gray-900);margin-bottom:3px;">${escapeHtml(inst.name)}${confirmedBadge}</div>
-              <div style="font-size:12px;color:var(--gray-600);margin-bottom:2px;line-height:1.5;"><span style="font-weight:600;color:var(--blue-600);">전문역량</span>&ensp;${escapeHtml(inst.expertise)}</div>
-              <div style="font-size:12px;color:var(--gray-600);line-height:1.5;"><span style="font-weight:600;color:var(--blue-600);">추천사유</span>&ensp;${escapeHtml(inst.match_reason)}</div>
+              <div style="font-size:12px;color:var(--gray-600);margin-bottom:2px;line-height:1.5;"><span style="font-weight:600;color:var(--gray-700);">전문역량</span>&ensp;${escapeHtml(inst.expertise)}</div>
+              <div style="font-size:12px;color:var(--gray-600);line-height:1.5;"><span style="font-weight:600;color:var(--gray-700);">추천사유</span>&ensp;${escapeHtml(inst.match_reason)}</div>
             </div>
           </div>`;
         }).join('')
@@ -6325,7 +6605,7 @@ function renderCourseOverviewHtml(ov, groups, sortedKeys) {
       <div style="margin-bottom:14px;">${subLabel('학습목표')}${objItems}</div>
       <div>${subLabel('강사추천')}${instItems}${confirmedSummary}</div>`;
 
-    rows_html += row(escapeHtml(getSubjectLabel(course)), courseContent, 'color:var(--blue-700,#1D4ED8);font-weight:700;');
+    rows_html += row(escapeHtml(getSubjectLabel(course)), courseContent, 'color:var(--gray-900);font-weight:700;');
   });
 
   return `<div class="co-groups-wrap"><div class="co-group">${rows_html}</div></div>`;
